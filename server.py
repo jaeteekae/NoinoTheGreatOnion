@@ -8,6 +8,7 @@ import socket
 import select
 import time
 import sys
+from headers import HeaderK
 
 # Changing the buffer_size and delay, you can improve the speed and bandwidth.
 # But when buffer get to high or delay go too down, you can broke things
@@ -88,3 +89,6 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print "Ctrl C - Stopping server"
             sys.exit(1)
+
+
+
