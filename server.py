@@ -33,20 +33,6 @@ class HTTPRequest(BaseHTTPRequestHandler):
         self.error_code = code
         self.error_message = message
 
-
-
-class Forward:
-    def __init__(self):
-        self.forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    def start(self, host, port):
-        try:
-            self.forward.connect((host, port))
-            return self.forward
-        except Exception, e:
-            print e
-            return False
-
 class TheServer:
     input_list = []
     channel = {}
@@ -82,17 +68,7 @@ class TheServer:
 
     def on_close(self):
         print self.s.getpeername(), "has disconnected"
-        #remove objects from input_list
         self.input_list.remove(self.s)
-        #self.input_list.remove(self.channel[self.s])
-        #out = self.channel[self.s]
-        # close the connection with client
-        #self.channel[out].close()  # equivalent to do self.s.close()
-        # close the connection with remote server
-        #self.channel[self.s].close()
-        # delete both objects from channel dict
-        #del self.channel[out]
-        #del self.channel[self.s]
 
     def on_recv(self, sockfd):
         data = self.data
@@ -104,10 +80,21 @@ class TheServer:
 
     def create_path(self, data, sockfd):
         indexes = set(range(len(self.input_list)))
-        bob = indexes.remove(random.choice(list(indexes)))
-        print bob
+        indexes.remove(0)
+        path = []
+        i = 0
 
-        print sockfd
+        # find random path of length through from existing clients
+        while i < 3:
+            if len(indexes) == 0:  # if we are out of nodes
+                break
+            node = random.choice(tuple(indexes))
+            indexes.remove(node)
+            if self.input_list[node] == sockfd: # if node is that of transmitting client
+                continue
+            path.append(self.input_list[node])
+
+        print path
 
 
 if __name__ == '__main__':
