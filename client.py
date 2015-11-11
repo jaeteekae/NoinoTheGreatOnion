@@ -10,6 +10,7 @@ import select
 import random
 import threading
 from headers import HeaderK, HeaderR
+from netaddr import *
 
 buffer_size = 4096
 delay = 0.0001
@@ -18,6 +19,8 @@ class TheClient:
     def __init__(self, port):
         self.client = socket.socket()         # Create a socket object
         host = socket.gethostname() # Get local machine name
+        print host
+        print port
         self.client.connect((host, port))
         self.client.sendall("PORT " + str((sys.argv)[1])) # tell the server what port the Client Server is listening on
         #s.close                     # Close the socket when done
@@ -79,9 +82,9 @@ class TheServer:
     def temp_connection(self, data):
         ip, port, msg = HeaderR.extract(HeaderR(), data)
         self.client = socket.socket()         # Create a socket object
-        self.client.connect((int(ip), port))
+        self.client.connect((IPAddress(ip), port))
         self.client.sendall(msg) 
-        self.client.close                     # Close the socket when done
+        self.client.close()                     # Close the socket when done
         
 
 if __name__ == '__main__':

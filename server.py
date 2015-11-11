@@ -114,6 +114,10 @@ class TheServer:
             while path:
                 step = path.pop().getsockname()
                 full = HeaderR.add(HeaderR(), str(step[0]), str(self.ports[step[0]]), str(full))
+            self.client = socket.socket()
+            self.client.connect((step[0], self.ports[step[0]]))
+            self.client.sendall(str(full))
+            self.client.close()
             print HeaderR.extract(HeaderR(), full)
         else:
             print HeaderK.extract(HeaderK(), initial)
