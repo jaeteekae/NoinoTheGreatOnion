@@ -10,6 +10,7 @@ import time
 import sys
 import random
 from headers import HeaderK
+from headers import HeaderR
 from BaseHTTPServer import BaseHTTPRequestHandler
 from StringIO import StringIO
 
@@ -36,6 +37,8 @@ class HTTPRequest(BaseHTTPRequestHandler):
 class TheServer:
     input_list = []
     channel = {}
+    current_connections = {}
+    ports = {'192.168.174.1':9098}
 
     def __init__(self, host, port):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,18 +76,25 @@ class TheServer:
     def on_recv(self, sockfd):
         data = self.data
         # here we can parse and/or modify the data before send forward
-        request = HTTPRequest(data)
         print data
-        if request.command == "GET":
+        #if request.command == "GET":
+        if data[0:4] == "PORT":
+            self.add_port(sockfd, int(data[5:]))
+        else:
             self.create_path(data, sockfd)
+
+    def add_port(self, sockfd, port):
+            self.ports[sockfd.getsockname()[0]] = port
 
     def create_path(self, data, sockfd):
         indexes = set(range(len(self.input_list)))
         indexes.remove(0)
         path = []
         i = 0
+        self.current_connections[sockfd.getsockname()[0]] = random.randint(1, 100000)
+        print self.current_connections
 
-        # find random path of length through from existing clients
+        # find random path of length three from existing clients
         while i < 3:
             if len(indexes) == 0:  # if we are out of nodes
                 break
@@ -93,8 +103,24 @@ class TheServer:
             if self.input_list[node] == sockfd: # if node is that of transmitting client
                 continue
             path.append(self.input_list[node])
+            i = i + 1
 
-        print path
+
+        initial = HeaderK.add(HeaderK(), str(self.current_connections[sockfd.getsockname()[0]]), data)
+
+        if path:
+            step = path.pop().getsockname()
+            full = HeaderR.add(HeaderR(), str(step[0]), str(self.ports[step[0]]), str(initial))
+            while path:
+                step = path.pop().getsockname()
+                full = HeaderR.add(HeaderR(), str(step[0]), str(self.ports[step[0]]), str(full))
+            print HeaderR.extract(HeaderR(), full)
+        else:
+            print HeaderK.extract(HeaderK(), initial)
+
+
+
+        #print path
 
 
 if __name__ == '__main__':
