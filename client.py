@@ -9,6 +9,7 @@ import time
 import select
 import random
 import threading
+from headers import HeaderK, HeaderR
 
 buffer_size = 4096
 delay = 0.0001
@@ -18,19 +19,19 @@ class TheClient:
         self.client = socket.socket()         # Create a socket object
         host = socket.gethostname() # Get local machine name
         self.client.connect((host, port))
+        self.client.sendall("PORT " + str((sys.argv)[1])) # tell the server what port the Client Server is listening on
         #s.close                     # Close the socket when done
 
     def main_loop(self):
         while 1:
             msg = sys.stdin.readline()
-            print msg
-            #self.client.sendall(msg)
-            #print self.client.recv(1024)
+            #print msg
+            self.client.sendall(msg)
+            print self.client.recv(1024)
 
 
 class TheServer:
     input_list = []
-    channel = {}
 
     def __init__(self, host, port):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,7 +69,20 @@ class TheServer:
     def on_recv(self, sockfd):
         data = self.data
         # here we can parse and/or modify the data before send forward
-        print data
+        if HeaderK.is_k(HeaderK(), data):
+            key, msg = HeaderK.extract(HeaderK(), data)
+            print "FINAL NODE\n"
+            print msg
+        elif HeaderR.is_r(HeaderR(), data):
+            self.temp_connection(data)
+
+    def temp_connection(self, data):
+        ip, port, msg = HeaderR.extract(HeaderR(), data)
+        self.client = socket.socket()         # Create a socket object
+        self.client.connect((int(ip), port))
+        self.client.sendall(msg) 
+        self.client.close                     # Close the socket when done
+        
 
 if __name__ == '__main__':
         server = TheServer('', int((sys.argv)[1]))
