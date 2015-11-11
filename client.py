@@ -82,7 +82,7 @@ class TheServer:
     def temp_connection(self, data):
         ip, port, msg = HeaderR.extract(HeaderR(), data)
         self.client = socket.socket()         # Create a socket object
-        self.client.connect((IPAddress(ip), port))
+        self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
         self.client.close()                     # Close the socket when done
         
