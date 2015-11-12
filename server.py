@@ -38,7 +38,7 @@ class TheServer:
     input_list = []
     channel = {}
     current_connections = {}
-    ports = {'192.168.174.1':9098}
+    ports = {}
 
     def __init__(self, host, port):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -84,11 +84,11 @@ class TheServer:
             self.create_path(data, sockfd)
 
     def add_port(self, sockfd, port):
-            self.ports[sockfd.getsockname()[0]] = port
+            self.ports[sockfd] = (sockfd.getsockname()[0], port)
 
     def create_path(self, data, sockfd):
-        indexes = set(range(len(self.input_list)))
-        indexes.remove(0)
+        indexes = set(range(len(self.ports)))
+        #indexes.remove(0)
         path = []
         i = 0
         self.current_connections[sockfd.getsockname()[0]] = random.randint(1, 100000)
@@ -100,22 +100,22 @@ class TheServer:
                 break
             node = random.choice(tuple(indexes))
             indexes.remove(node)
-            if self.input_list[node] == sockfd: # if node is that of transmitting client
+            if self.ports.keys()[node] == sockfd: # if node is that of transmitting client
                 continue
-            path.append(self.input_list[node])
+            path.append(self.ports.values()[node])
             i = i + 1
 
 
         initial = HeaderK.add(HeaderK(), str(self.current_connections[sockfd.getsockname()[0]]), data)
 
         if path:
-            step = path.pop().getsockname()
-            full = HeaderR.add(HeaderR(), str(step[0]), str(self.ports[step[0]]), str(initial))
+            step = path.pop()
+            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(initial))
             while path:
-                step = path.pop().getsockname()
-                full = HeaderR.add(HeaderR(), str(step[0]), str(self.ports[step[0]]), str(full))
+                step = path.pop()
+                full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(full))
             self.client = socket.socket()
-            self.client.connect((step[0], self.ports[step[0]]))
+            self.client.connect((step[0], step[1]))
             self.client.sendall(str(full))
             self.client.close()
             print str(full)
