@@ -74,7 +74,7 @@ class TheServer:
         # here we can parse and/or modify the data before send forward
         if HeaderK.is_k(HeaderK(), data):
             key, msg = HeaderK.extract(HeaderK(), data)
-            print "FINAL NODE\n"
+            print "FINAL NODE"
             print msg
         elif HeaderR.is_r(HeaderR(), data):
             self.temp_connection(data)

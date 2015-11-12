@@ -118,9 +118,9 @@ class TheServer:
             self.client.connect((step[0], self.ports[step[0]]))
             self.client.sendall(str(full))
             self.client.close()
-            print HeaderR.extract(HeaderR(), full)
+            print str(full)
         else:
-            print HeaderK.extract(HeaderK(), initial)
+            print str(initial)
 
 
 
