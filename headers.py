@@ -10,6 +10,12 @@ class HeaderK:
     def extract(self, msg):
         return parse("Key: {}\nMessage: {}", msg)
 
+    def is_k(self, msg):
+        if self.extract(msg):
+            return True
+        else:
+            return False
+
 class HeaderR:
     # returns header containing IP address & port of next hop + msg
     def add(self, ip, port, msg):
@@ -18,3 +24,9 @@ class HeaderR:
     # returns tuple of IP, port, and msg
     def extract(self, msg):
         return parse("IP: {}\nPort: {}\nMessage: {}", msg)
+
+    def is_r(self, msg):
+        if self.extract(msg):
+            return True
+        else:
+            return False
