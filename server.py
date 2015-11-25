@@ -85,7 +85,6 @@ class TheServer:
 
     def add_port(self, sockfd, port):
             self.ports[str(sockfd)] = (sockfd.getsockname()[0], port)
-            print self.ports
             for client in self.ports.values():
                 self.client = socket.socket()
                 self.client.connect((client[0], client[1]))

@@ -10,17 +10,18 @@ import select
 import random
 import threading
 import ast
-from headers import HeaderK, HeaderR
+from headers import HeaderK, HeaderR, HeaderM
 from netaddr import *
 from parse import *
 
 buffer_size = 4096
 delay = 0.0001
-ports = {}
+# ports = {}
 
 class TheClient:
     IP = ''
     lport = 0
+    ports = {}
 
     def __init__(self, port):
         self.client = socket.socket()         # Create a socket object
@@ -38,10 +39,10 @@ class TheClient:
             msg = sys.stdin.readline()
             #print msg
             self.create_path(msg)
-            print self.client.recv(1024)
+            # print self.client.recv(1024)
 
     def create_path(self, data):
-        indexes = set(range(len(ports)))
+        indexes = set(range(len(self.ports)))
         path = []
         i = 0
 
@@ -51,39 +52,34 @@ class TheClient:
                 break
             node = random.choice(tuple(indexes))
             indexes.remove(node)
-            print "From list: " + ports.values()[node][0] + "   Stored: " + self.IP
-            print "From list: " + str(ports.values()[node][1]) + "   Stored: " + str(self.lport)
-            if (str(ports.values()[node][0]) == str(self.IP)) and (str(ports.values()[node][1]) == str(self.lport)): # if node is that of transmitting client
+            if (str(self.ports.values()[node][0]) == str(self.IP)) and (str(self.ports.values()[node][1]) == str(self.lport)): # if node is that of transmitting client
                 continue
-            path.append(ports.values()[node])
+            path.append(self.ports.values()[node])
             i = i + 1
 
         print path
 
-        # initial = HeaderK.add(HeaderK(), str(self.current_connections[sockfd.getsockname()[0]]), data)
+        full = HeaderM.add(HeaderM(), str(data))
 
-        # if path:
-        #     step = path.pop()
-        #     full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(initial))
-        #     while path:
-        #         step = path.pop()
-        #         full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(full))
-        #     self.client = socket.socket()
-        #     self.client.connect((step[0], step[1]))
-        #     self.client.sendall(str(full))
-        #     self.client.close()
-        #     print str(full)
-        # else:
-        #     print str(initial)
+        while len(path) > 1:
+            step = path.pop()
+            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(full))
+        step = path.pop()
+        self.sender = socket.socket()
+        self.sender.connect((step[0], step[1]))
+        self.sender.sendall(str(full))
+        self.sender.close()
+        print str(full)
 
 class TheServer:
     input_list = []
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, client):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind((host, port))
         self.server.listen(200)
+        self.client = client
 
     def main_loop(self):
         self.input_list.append(self.server)
@@ -113,18 +109,18 @@ class TheServer:
         self.input_list.remove(self.s)
 
     def on_recv(self, sockfd):
-        global ports
+        # global ports
         data = self.data
         # here we can parse and/or modify the data before send forward
-        if HeaderK.is_k(HeaderK(), data):
-            key, msg = HeaderK.extract(HeaderK(), data)
-            print "FINAL NODE"
-            print msg
-        elif HeaderR.is_r(HeaderR(), data):
+
+        if HeaderR.is_r(HeaderR(), data):
             self.temp_connection(data)
         elif data[0:5] == "PORTS":
-            ports = ast.literal_eval(data[5:])
-
+            self.client.ports = ast.literal_eval(data[5:])
+        elif HeaderM.is_m(HeaderM(), data):
+            msg = HeaderM.extract(HeaderM(), data)
+            print "FINAL NODE"
+            print msg
 
 
     def temp_connection(self, data):
@@ -136,8 +132,8 @@ class TheServer:
         
 
 if __name__ == '__main__':
-        server = TheServer('', int((sys.argv)[1]))
         client = TheClient(int((sys.argv)[2]))
+        server = TheServer('', int((sys.argv)[1]), client)
         try:
             ts = threading.Thread(target=server.main_loop)
             tc = threading.Thread(target=client.main_loop)
