@@ -10,6 +10,7 @@ import select
 import random
 import threading
 import ast
+import time
 from headers import HeaderK, HeaderR, HeaderM
 from netaddr import *
 from parse import *
@@ -136,9 +137,13 @@ if __name__ == '__main__':
         server = TheServer('', int((sys.argv)[1]), client)
         try:
             ts = threading.Thread(target=server.main_loop)
+            ts.daemon = True
             tc = threading.Thread(target=client.main_loop)
+            tc.daemon = True
             ts.start()
             tc.start()
+            while True:
+                time.sleep(1)
         except KeyboardInterrupt:
             print "Ctrl C - Stopping server"
             sys.exit(1)
