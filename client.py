@@ -18,7 +18,8 @@ from Crypto.PublicKey import RSA
 
 buffer_size = 4096
 delay = 0.0001
-# ports = {}
+key = RSA.generate(2048)
+public_key = key.publickey()
 
 class TheClient:
     IP = ''
@@ -30,14 +31,13 @@ class TheClient:
         host = socket.gethostname() # Get local machine name
         self.IP = socket.gethostbyname(host)
         self.lport = (sys.argv)[1]
-        self.key = RSA.generate(2048)
-        self.public_key = self.key.publickey()
         print host
         print port
-        #print self.public_key.exportKey('PEM')
+        #print "---EXPORTED KEY---\n", self.public_key.exportKey('PEM')
         self.client.connect((host, port))
-        msg = "PORT " + str((sys.argv)[1]) + "\n" + self.public_key.exportKey('PEM')
-        print msg
+        # print "PUBLIC KEY: ",public_key.exportKey('PEM')
+        msg = "PORT " + str((sys.argv)[1]) + "\n" + public_key.exportKey('PEM')
+        #print msg
         self.client.sendall(msg) # tell the server what port the Client Server is listening on
         #s.close                     # Close the socket when done
 
@@ -59,24 +59,35 @@ class TheClient:
             node = random.choice(tuple(indexes))
             indexes.remove(node)
             if (str(self.ports.values()[node][0]) == str(self.IP)) and (str(self.ports.values()[node][1]) == str(self.lport)): # if node is that of transmitting client
+                # my_key = RSA.importKey(self.ports.values()[node][2])
+                # enc_data = my_key.encrypt('abcdefgh', 32)
+                # print "ENC : "
+                # print enc_data
+                # print "DECRYPTED : " + key.decrypt(enc_data)
                 continue
             path.append(self.ports.values()[node])
             i = i + 1
-
-        print path
+        #print path
 
         full = HeaderM.add(HeaderM(), str(data))
 
         while len(path) > 1:
+            # print str(full)
             step = path.pop()
+            #print "----STEP 2----\n", step[2]
             tmp_key = RSA.importKey(step[2])
+            # print "TMP_KEY: ",step[2]
             msg = tmp_key.encrypt(str(full), 32)
-            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg)
+            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg[0])
+        # print str(full)
         step = path.pop()
+        tmp_key = RSA.importKey(step[2])
+        # print "TMP_KEY: ",step[2]
+        msg = tmp_key.encrypt(str(full), 32)
         self.sender = socket.socket()
         self.sender.connect((step[0], step[1]))
-        self.sender.sendall(str(full))
-        print str(full)
+        self.sender.sendall(str(msg))
+        # print str(msg)
         self.response = self.sender.recv(buffer_size)
         print str(self.response)
         self.sender.close()
@@ -121,31 +132,37 @@ class TheServer:
 
     def on_recv(self, sockfd):
         # global ports
+        #print "ENC DATA:\n", self.data
         data = self.data
+        #print "DATA: \n", data
+        #TODO: DECRYPT HERE
         # here we can parse and/or modify the data before send forward
-
-        if HeaderR.is_r(HeaderR(), data):
-            self.temp_connection(data)
-        elif data[0:5] == "PORTS":
+        if data[0:5] == "PORTS":
             self.client.ports = ast.literal_eval(data[5:])
-        elif HeaderM.is_m(HeaderM(), data):
-            msg = HeaderM.extract(HeaderM(), data)
-            print "FINAL NODE"
-            print msg
-            self.s.sendall("message received")
+        else:
+            print "ENC DATA:\n", self.data
+            data = key.decrypt(self.data)
+            print "DATA: \n", data
+            if HeaderR.is_r(HeaderR(), data):
+                self.temp_connection(data)
+            elif HeaderM.is_m(HeaderM(), data):
+                msg = HeaderM.extract(HeaderM(), data)
+                print "FINAL NODE"
+                print msg
+                self.s.sendall("message received")
 
         self.on_close()
 
 
     def temp_connection(self, data):
-        unencrypted_data = self.key.decrypt(data)
-        ip, port, msg = HeaderR.extract(HeaderR(), unencrypted_data)
+        #print "DATA: \n", data
+        ip, port, msg = HeaderR.extract(HeaderR(), data)
         self.client = socket.socket()         # Create a socket object
         self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
         response = self.client.recv(buffer_size)
         print str(response)
-        #self.s.sendall(self.key.encrypt(response))
+        #self.s.sendall(key.encrypt(response))
         self.client.close()                     # Close the socket when done
 
         

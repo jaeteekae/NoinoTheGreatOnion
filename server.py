@@ -82,7 +82,7 @@ class TheServer:
             self.add_port(sockfd, data)
 
     def add_port(self, sockfd, data):
-            port_and_key = parse("PORT {}\n-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----", data).fixed
+            port_and_key = parse("PORT {}\n{}", data).fixed
             self.ports[str(sockfd)] = (sockfd.getsockname()[0], int(port_and_key[0]), port_and_key[1])
             for client in self.ports.values():
                 self.client = socket.socket()
