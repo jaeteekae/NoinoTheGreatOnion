@@ -1,2 +1,3 @@
 parse==1.6.6
 netaddr==0.7.18
+pycrypto==2.6.1
