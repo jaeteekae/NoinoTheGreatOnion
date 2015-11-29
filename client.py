@@ -14,6 +14,7 @@ import time
 from headers import HeaderK, HeaderR, HeaderM
 from netaddr import *
 from parse import *
+from Crypto.PublicKey import RSA
 
 buffer_size = 4096
 delay = 0.0001
@@ -29,10 +30,13 @@ class TheClient:
         host = socket.gethostname() # Get local machine name
         self.IP = socket.gethostbyname(host)
         self.lport = (sys.argv)[1]
+        self.key = RSA.generate(2048)
+        self.public_key = self.key.publickey()
         print host
         print port
+        #print self.public_key.exportKey('PEM')
         self.client.connect((host, port))
-        self.client.sendall("PORT " + str((sys.argv)[1])) # tell the server what port the Client Server is listening on
+        self.client.sendall("PORT " + str((sys.argv)[1]) + self.public_key.exportKey('PEM')) # tell the server what port the Client Server is listening on
         #s.close                     # Close the socket when done
 
     def main_loop(self):
