@@ -136,13 +136,14 @@ class TheServer:
 
 
     def temp_connection(self, data):
-        ip, port, msg = HeaderR.extract(HeaderR(), data)
+        unencrypted_data = self.key.decrypt(data)
+        ip, port, msg = HeaderR.extract(HeaderR(), unencrypted_data)
         self.client = socket.socket()         # Create a socket object
         self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
-        self.response = self.client.recv(buffer_size)
-        print str(self.response)
-        self.s.sendall(self.response)
+        response = self.client.recv(buffer_size)
+        print str(response)
+        #self.s.sendall(self.key.encrypt(response))
         self.client.close()                     # Close the socket when done
 
         
