@@ -69,8 +69,11 @@ class TheClient:
         self.sender = socket.socket()
         self.sender.connect((step[0], step[1]))
         self.sender.sendall(str(full))
-        self.sender.close()
         print str(full)
+        self.response = self.sender.recv(buffer_size)
+        print str(self.response)
+        self.sender.close()
+        
 
 class TheServer:
     input_list = []
@@ -95,7 +98,7 @@ class TheServer:
 
                 self.data = self.s.recv(buffer_size)
                 if len(self.data) == 0:
-                    self.on_close()
+                    # self.on_close()
                     break
                 else:
                     self.on_recv(self.s)
@@ -124,6 +127,8 @@ class TheServer:
             print msg
             self.s.sendall("message received")
 
+        self.on_close()
+
 
     def temp_connection(self, data):
         ip, port, msg = HeaderR.extract(HeaderR(), data)
@@ -131,8 +136,10 @@ class TheServer:
         self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
         self.response = self.client.recv(buffer_size)
+        print str(self.response)
         self.s.sendall(self.response)
         self.client.close()                     # Close the socket when done
+
         
 
 if __name__ == '__main__':

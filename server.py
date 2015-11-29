@@ -65,11 +65,11 @@ class TheServer:
 
     def on_accept(self):
         clientsock, clientaddr = self.server.accept()
-        print clientaddr, "has connected"
+        # print clientaddr, "has connected"
         self.input_list.append(clientsock)
 
     def on_close(self):
-        print self.s.getpeername(), "has disconnected"
+        # print self.s.getpeername(), "has disconnected"
         self.input_list.remove(self.s)
 
     def on_recv(self, sockfd):
