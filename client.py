@@ -122,6 +122,7 @@ class TheServer:
             msg = HeaderM.extract(HeaderM(), data)
             print "FINAL NODE"
             print msg
+            self.s.sendall("message received")
 
 
     def temp_connection(self, data):
@@ -129,6 +130,8 @@ class TheServer:
         self.client = socket.socket()         # Create a socket object
         self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
+        self.response = self.client.recv(buffer_size)
+        self.s.sendall(self.response)
         self.client.close()                     # Close the socket when done
         
 
