@@ -9,6 +9,7 @@ import select
 import time
 import sys
 import random
+
 from headers import HeaderK
 from headers import HeaderR
 from BaseHTTPServer import BaseHTTPRequestHandler
@@ -36,8 +37,6 @@ class HTTPRequest(BaseHTTPRequestHandler):
 
 class TheServer:
     input_list = []
-    channel = {}
-    current_connections = {}
     ports = {}
 
     def __init__(self, host, port):
@@ -84,43 +83,52 @@ class TheServer:
             self.create_path(data, sockfd)
 
     def add_port(self, sockfd, port):
-            self.ports[sockfd] = (sockfd.getsockname()[0], port)
+            self.ports[str(sockfd)] = (sockfd.getsockname()[0], port)
+            for client in self.ports.values():
+                self.client = socket.socket()
+                self.client.connect((client[0], client[1]))
+                self.client.sendall("PORTS" + str(self.ports))
+                self.client.close()
 
     def create_path(self, data, sockfd):
-        indexes = set(range(len(self.ports)))
-        #indexes.remove(0)
-        path = []
-        i = 0
-        self.current_connections[sockfd.getsockname()[0]] = random.randint(1, 100000)
-        print self.current_connections
+        self.client = socket.socket()
+        self.client.connect((sockfd.getsockname()[0], self.ports[str(sockfd)][1]))
+        self.client.sendall("PORTSMessage: " + data + "\nPorts: " + str(self.ports) + "\n")
+        self.client.close()
+        # indexes = set(range(len(self.ports)))
+        # #indexes.remove(0)
+        # path = []
+        # i = 0
+        # self.current_connections[sockfd.getsockname()[0] = random.randint(1, 100000)
+        # print self.current_connections
 
-        # find random path of length three from existing clients
-        while i < 3:
-            if len(indexes) == 0:  # if we are out of nodes
-                break
-            node = random.choice(tuple(indexes))
-            indexes.remove(node)
-            if self.ports.keys()[node] == sockfd: # if node is that of transmitting client
-                continue
-            path.append(self.ports.values()[node])
-            i = i + 1
+        # # find random path of length three from existing clients
+        # while i < 3:
+        #     if len(indexes) == 0:  # if we are out of nodes
+        #         break
+        #     node = random.choice(tuple(indexes))
+        #     indexes.remove(node)
+        #     if self.ports.keys()[node] == sockfd: # if node is that of transmitting client
+        #         continue
+        #     path.append(self.ports.values()[node])
+        #     i = i + 1
 
 
-        initial = HeaderK.add(HeaderK(), str(self.current_connections[sockfd.getsockname()[0]]), data)
+        # initial = HeaderK.add(HeaderK(), str(self.current_connections[sockfd.getsockname()[0]]), data)
 
-        if path:
-            step = path.pop()
-            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(initial))
-            while path:
-                step = path.pop()
-                full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(full))
-            self.client = socket.socket()
-            self.client.connect((step[0], step[1]))
-            self.client.sendall(str(full))
-            self.client.close()
-            print str(full)
-        else:
-            print str(initial)
+        # if path:
+        #     step = path.pop()
+        #     full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(initial))
+        #     while path:
+        #         step = path.pop()
+        #         full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(full))
+        #     self.client = socket.socket()
+        #     self.client.connect((step[0], step[1]))
+        #     self.client.sendall(str(full))
+        #     self.client.close()
+        #     print str(full)
+        # else:
+        #     print str(initial)
 
 
 

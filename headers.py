@@ -1,6 +1,21 @@
 from parse import *
 
 
+class HeaderM:
+    # returns header containing key + msg
+    def add(self, msg):
+        return "Message: " + msg
+
+    # returns tuple of key and msg
+    def extract(self, msg):
+        return parse("Message: {}", msg)
+
+    def is_m(self, msg):
+        if self.extract(msg):
+            return True
+        else:
+            return False
+
 class HeaderK:
     # returns header containing key + msg
     def add(self, key, msg):
