@@ -69,7 +69,9 @@ class TheClient:
 
         while len(path) > 1:
             step = path.pop()
-            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), str(full))
+            tmp_key = RSA.importKey(step[2])
+            msg = tmp_key.encrypt(str(full), 32)
+            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg)
         step = path.pop()
         self.sender = socket.socket()
         self.sender.connect((step[0], step[1]))
