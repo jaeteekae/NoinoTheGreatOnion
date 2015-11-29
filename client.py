@@ -36,7 +36,9 @@ class TheClient:
         print port
         #print self.public_key.exportKey('PEM')
         self.client.connect((host, port))
-        self.client.sendall("PORT " + str((sys.argv)[1]) + self.public_key.exportKey('PEM')) # tell the server what port the Client Server is listening on
+        msg = "PORT " + str((sys.argv)[1]) + "\n" + self.public_key.exportKey('PEM')
+        print msg
+        self.client.sendall(msg) # tell the server what port the Client Server is listening on
         #s.close                     # Close the socket when done
 
     def main_loop(self):
