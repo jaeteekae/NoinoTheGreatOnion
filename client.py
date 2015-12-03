@@ -224,7 +224,7 @@ class TheServer:
         # print "FTABLE:\n", self.ftable
         sent = []
         for nonce in self.msgbuffer:
-            if self.ftable[nonce]:
+            if nonce in self.ftable:
                 # forward the message
                 encoded_msg, encoded_key1, encoded_key2 = self.msgbuffer[nonce]
                 ip, port = self.ftable[nonce]
