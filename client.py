@@ -194,8 +194,8 @@ class TheServer:
                     print msg
                     response = "message received"
                     encoded_response = key.encrypt(response, 32)[0]
-                    #self.s.sendall(encoded_response)
-                    self.s.sendall("message received")
+                    self.s.sendall(encoded_response)
+                    #self.s.sendall("message received")
                 else:
                     # add partially decoded message to the buffer table
                     self.msgbuffer[nonce] = decoded_msg
@@ -232,9 +232,9 @@ class TheServer:
         self.client.sendall(msg) 
         response = self.client.recv(buffer_size)
         encoded_response = key.encrypt(response, 32)[0]
-        print str(response)
-        self.s.sendall(response)
-        #self.s.sendall(encoded_response)
+        #print str(response)
+        #self.s.sendall(response)
+        self.s.sendall(encoded_response)
         self.client.close()                     # Close the socket when done
 
         
