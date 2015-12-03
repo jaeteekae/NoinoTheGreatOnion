@@ -1,6 +1,6 @@
 from parse import *
 
-
+# Header Message
 class HeaderM:
     # returns header containing key + msg
     def add(self, msg):
@@ -16,6 +16,7 @@ class HeaderM:
         else:
             return False
 
+# Header Key
 class HeaderK:
     # returns header containing key + msg
     def add(self, key, msg):
@@ -31,6 +32,7 @@ class HeaderK:
         else:
             return False
 
+# Header R-something
 class HeaderR:
     # returns header containing IP address & port of next hop + msg
     def add(self, ip, port, msg):
@@ -46,6 +48,7 @@ class HeaderR:
         else:
             return False
 
+# Header Forward
 class HeaderF:
     # returns header containing key + msg
     def add(self, nonce, port, ip):

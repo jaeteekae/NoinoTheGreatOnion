@@ -95,6 +95,8 @@ class TheClient:
 
 class TheServer:
     input_list = []
+    # forwarding table: [nonce]=(ip, port)
+    ftable{}
 
     def __init__(self, host, port, client):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -146,7 +148,9 @@ class TheServer:
             if HeaderR.is_r(HeaderR(), data):
                 self.temp_connection(data)
             if HeaderF.is_f(HeaderF(), data):
-                
+                # add nonce to the forwarding table
+                nonce, port, ip = HeaderF.extract(HeaderF(), data)
+                ftable[nonce]=(ip, port)
             elif HeaderM.is_m(HeaderM(), data):
                 msg = HeaderM.extract(HeaderM(), data)
                 print "FINAL NODE"
