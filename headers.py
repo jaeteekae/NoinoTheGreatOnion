@@ -75,3 +75,18 @@ class HeaderE:
             return True
         else:
             return False
+
+class HeaderN:
+    # returns header containing key + msg
+    def add(self, nonce):
+        return "Nonce: " + nonce
+
+    # returns tuple of key and msg
+    def extract(self, msg):
+        return parse("Nonce: {}", msg)
+
+    def is_n(self, msg):
+        if self.extract(msg):
+            return True
+        else:
+            return False
