@@ -99,9 +99,10 @@ class TheClient:
 
         m1to2 = n1_key.encrypt(HeaderF.add(nonce, str(n2[1]), str(n2[0])), 32)[0]
         m2to3 = n2_key.encrypt(HeaderF.add(nonce, str(n3[1]), str(n3[0])), 32)[0]
-        enc_msg = n3_key.encrypt(HeaderE.add(HeaderM.add(data), nonce), 32)[0]
+        enc_msg = n3_key.encrypt(HeaderM.add(data), 32)[0]
         enc_msg = n2_key.encrypt(enc_msg, 32)[0]
         enc_msg = n1_key.encrypt(enc_msg, 32)[0]
+        enc_msg = HeaderE.add(enc_msg, nonce)
 
 
 
