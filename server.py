@@ -96,6 +96,8 @@ class TheServer:
             self.available_nonces.remove(nonce)
             msg = HeaderN.add(str(nonce))
             sockfd.sendall(msg)
+            sockfd.close()
+            self.on_close()
 
     def nonce_returned(self, nonce):
             self.available_nonces.add(nonce)
