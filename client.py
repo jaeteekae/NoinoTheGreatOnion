@@ -17,7 +17,7 @@ from netaddr import *
 from parse import *
 from Crypto.PublicKey import RSA
 
-buffer_size = 8192
+buffer_size = 16384
 delay = 0.0001
 key = RSA.generate(2048)
 public_key = key.publickey()
@@ -140,7 +140,6 @@ class TheClient:
 
     # establish temporary connection to send and receive a message from server at (ip, port)
     def temp_connection_with_response(self, ip, port, msg):
-        timeout = 4
         self.sender = socket.socket()    
         try:  
             self.sender.connect((ip, port))
@@ -148,9 +147,13 @@ class TheClient:
         except socket.error:
             print "An essential node has disconnected. Cannot send message."
             sys.exit()
+        return self.recv_all(self.sender, 10)
+
+    def recv_all(self, sock, t):
+        timeout = t
 
         # source: http://www.binarytides.com/receive-full-data-with-the-recv-socket-function-in-python/
-        self.sender.setblocking(0)
+        sock.setblocking(0)
         total_data=[]
         data = ''
 
@@ -161,7 +164,7 @@ class TheClient:
             elif time.time()-begin > timeout*2:
                 break
             try:
-                data = self.sender.recv(buffer_size)
+                data = sock.recv(buffer_size)
                 if data:
                     total_data.append(data)
                     begin = time.time()
@@ -199,7 +202,7 @@ class TheServer:
                     self.on_accept()
                     break
 
-                self.data = self.s.recv(buffer_size)
+                self.data = self.client.recv_all(self.s, 0.2)
                 if len(self.data) == 0:
                     # self.on_close()
                     break
@@ -230,6 +233,7 @@ class TheServer:
             if HeaderM.is_m(decoded_msg):
                 msg = HeaderM.extract(decoded_msg)[0]
                 response = self.http_response(msg)
+                print decoded_key1 + decoded_key2
                 pk = RSA.importKey(decoded_key1 + decoded_key2)
                 encoded_response = self.split_response(response, pk)
                 self.s.sendall(encoded_response)
@@ -262,14 +266,17 @@ class TheServer:
 
     def temp_connection(self, ip, port, msg):
         # send msg forward
-        self.client = socket.socket()         # Create a socket object
-        self.client.connect((str(IPAddress(ip)), int(port)))
-        self.client.sendall(msg) 
+        self.tmp = socket.socket()         # Create a socket object
+        self.tmp.connect((str(IPAddress(ip)), int(port)))
+        self.tmp.sendall(msg) 
 
-        # return the response on the same socket
-        response = self.client.recv(buffer_size)
+        response = self.client.recv_all(self.tmp, 5)
         self.s.sendall(response)
-        self.client.close()                     # Close the socket when done
+
+
+        # response = self.client.recv(buffer_size)
+        # self.s.sendall(response)
+        self.tmp.close()                     # Close the socket when done
 
     def http_response(self, req):
         r = requests.get(req)
