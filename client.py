@@ -69,7 +69,7 @@ class TheClient:
             i = i + 1
         #print path
 
-        full = HeaderM.add(HeaderM(), str(data))
+        full = HeaderM.add(str(data))
 
         while len(path) > 1:
             # print str(full)
@@ -78,7 +78,7 @@ class TheClient:
             tmp_key = RSA.importKey(step[2])
             # print "TMP_KEY: ",step[2]
             msg = tmp_key.encrypt(str(full), 32)
-            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg[0])
+            full = HeaderR.add(str(step[0]), str(step[1]), msg[0])
         # print str(full)
         step = path.pop()
         tmp_key = RSA.importKey(step[2])
@@ -148,16 +148,16 @@ class TheServer:
             #print "ENC DATA:\n", self.data
             #data = key.decrypt(self.data)
             print "DATA: \n", data
-            if HeaderF.is_f(HeaderF(), data):
+            if HeaderF.is_f(data):
                 # add nonce to the forwarding table
-                nonce, port, ip = HeaderF.extract(HeaderF(), data)
+                nonce, port, ip = HeaderF.extract(data)
                 ftable[nonce] = (ip, port)
-            if HeaderE.is_e(HeaderE(), data):
+            if HeaderE.is_e(data):
                 # add encoded message to the buffer table
-                encoded_msg, nonce = HeaderE.extract(HeaderE(), data)
+                encoded_msg, nonce = HeaderE.extract(data)
                 msgbuffer[nonce] = encoded_msg
-            elif HeaderM.is_m(HeaderM(), data):
-                msg = HeaderM.extract(HeaderM(), data)
+            elif HeaderM.is_m(data):
+                msg = HeaderM.extract(data)[0]
                 print "FINAL NODE"
                 print msg
                 self.s.sendall("message received")
@@ -170,7 +170,7 @@ class TheServer:
                 # forward the message
                 encoded_msg = msgbuffer[nonce]
                 ip, port = ftable[nonce]
-                msg_and_h = HeaderE.add(HeaderE(), encoded_msg, nonce)
+                msg_and_h = HeaderE.add(encoded_msg, nonce)
                 temp_connection(ip, port, msg_and_h)
                 # delete the entries for nonce in the tables
                 del msgbuffer[nonce]
