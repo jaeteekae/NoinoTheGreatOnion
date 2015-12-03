@@ -60,3 +60,18 @@ class HeaderF:
             return True
         else:
             return False
+
+class HeaderE:
+    # returns header containing key + msg
+    def add(self, enc, nonce):
+        return "Enc: " + enc + "\nNonce: " + nonce
+
+    # returns tuple of key and msg
+    def extract(self, msg):
+        return parse("Enc: {}\nNonce: {}", msg)
+
+    def is_e(self, msg):
+        if self.extract(msg):
+            return True
+        else:
+            return False
