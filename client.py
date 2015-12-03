@@ -118,9 +118,9 @@ class TheClient:
         return response
 
 class TheServer:
-    input_list = []
-    ftable = {} # forwarding table: [nonce]=(ip, port)
-    msgbuffer = {} # buffer for HeaderE messages: [nonce]=(encoded_msg, pk1, pk2)
+    input_list = [] # for keeping track of connections
+    ftable = {}     # forwarding table: [nonce]=(ip, port)
+    msgbuffer = {}  # buffer for HeaderE messages: [nonce]=(encoded_msg, pk1, pk2)
 
     def __init__(self, host, port, client):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -133,8 +133,10 @@ class TheServer:
         self.input_list.append(self.server)
         while 1:
             time.sleep(delay)
+
             # if there are old messages in the buffer to send, send them
             self.forward_nonces()
+
             # accept new connections
             ss = select.select
             inputready, outputready, exceptready = ss(self.input_list, [], [])
@@ -152,81 +154,69 @@ class TheServer:
 
     def on_accept(self):
         clientsock, clientaddr = self.server.accept()
-        # print clientaddr, "has connected"
         self.input_list.append(clientsock)
 
     def on_close(self):
-        # print self.s.getpeername(), "has disconnected"
         self.input_list.remove(self.s)
 
     def on_recv(self, sockfd):
-        # global ports
-        #print "ENC DATA:\n", self.data
         data = self.data
-        # print "DATA: \n", data
-        #TODO: DECRYPT HERE
-        # here we can parse and/or modify the data before send forward
+        # PORT message: add the new client
         if HeaderPB.is_pb(data):
             str_ports = HeaderPB.extract(data)[0]
             self.client.ports = ast.literal_eval(str_ports)
-        # print "DATA: \n", data
+        # HeaderE message: decrypt one layer off the message
         elif HeaderE.is_e(data):
             encoded_msg, nonce, encoded_key1, encoded_key2 = HeaderE.extract(data)
             decoded_msg = key.decrypt((encoded_msg,))
             decoded_key1 = key.decrypt((encoded_key1,))
             decoded_key2 = key.decrypt((encoded_key2,))
-            print "DECODED KEY:\n", decoded_key1 + decoded_key2
+
+            # HeaderM message: this node is the last in the path
             if HeaderM.is_m(decoded_msg):
                 msg = HeaderM.extract(decoded_msg)[0]
-                print "FINAL NODE"
-                print msg
                 response = "message received"
                 pk = RSA.importKey(decoded_key1 + decoded_key2)
                 encoded_response = pk.encrypt(response, 32)[0]
                 self.s.sendall(encoded_response)
-                #self.s.sendall("message received")
             else:
                 # add partially decoded message & key to the buffer table
                 self.msgbuffer[nonce] = (decoded_msg, decoded_key1, decoded_key2)
         else:
+            # HeaderF message: keep track of where to forward nonce for future use
             decoded_msg = key.decrypt((data,))
             if HeaderF.is_f(decoded_msg):
                 # add nonce to the forwarding table
                 nonce, port, ip = HeaderF.extract(decoded_msg)
                 self.ftable[nonce] = (ip, port)
-            
-
         self.on_close()
 
     def forward_nonces(self):
-        # print "MSGBUFFER:\n", self.msgbuffer
-        # print "FTABLE:\n", self.ftable
         sent = []
+        # forward all messages with forwarding information
         for nonce in self.msgbuffer:
             if nonce in self.ftable:
-                # forward the message
                 encoded_msg, encoded_key1, encoded_key2 = self.msgbuffer[nonce]
                 ip, port = self.ftable[nonce]
                 msg_and_h = HeaderE.add(encoded_msg, nonce, encoded_key1, encoded_key2)
                 self.temp_connection(ip, port, msg_and_h)
-                # delete the entries for nonce in the tables
                 sent.append(nonce)
+        # delete the entries for sent nonces in the tables
         for nonce in sent:
             del self.msgbuffer[nonce]
             del self.ftable[nonce]
 
     def temp_connection(self, ip, port, msg):
+        # send msg forward
         self.client = socket.socket()         # Create a socket object
         self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
+
+        # return the response on the same socket
         response = self.client.recv(buffer_size)
-        #encoded_response = key.encrypt(response, 32)[0]
-        #print str(response)
         self.s.sendall(response)
-        #self.s.sendall(encoded_response)
         self.client.close()                     # Close the socket when done
 
-        
 
 if __name__ == '__main__':
         client = TheClient(int((sys.argv)[2]))
