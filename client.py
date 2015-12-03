@@ -80,7 +80,7 @@ class TheClient:
         print nonce
         # enc_msg = HeaderE.add(HeaderE(), str(data) +)
 
-        # while len(path) > 1:
+
             # print str(full)
             # step = path.pop()
             #print "----STEP 2----\n", step[2]
@@ -88,6 +88,7 @@ class TheClient:
             # print "TMP_KEY: ",step[2]
             # msg = tmp_key.encrypt(str(full), 32)
             # full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg[0])
+
         # print str(full)
         step = path.pop()
 
@@ -105,6 +106,8 @@ class TheClient:
 
 class TheServer:
     input_list = []
+    ftable{} # forwarding table: [nonce]=(ip, port)
+    msgbuffer{} # buffer for HeaderE messages: [nonce]=encoded_msg
 
     def __init__(self, host, port, client):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -117,6 +120,9 @@ class TheServer:
         self.input_list.append(self.server)
         while 1:
             time.sleep(delay)
+            # if there are old messages in the buffer to send, send them
+            self.forward_nonces()
+            # accept new connections
             ss = select.select
             inputready, outputready, exceptready = ss(self.input_list, [], [])
             for self.s in inputready:
@@ -153,26 +159,42 @@ class TheServer:
             print "ENC DATA:\n", self.data
             data = key.decrypt(self.data)
             print "DATA: \n", data
-            if HeaderR.is_r(HeaderR(), data):
-                self.temp_connection(data)
-            elif HeaderM.is_m(HeaderM(), data):
-                msg = HeaderM.extract(HeaderM(), data)
+            if HeaderF.is_f(data):
+                # add nonce to the forwarding table
+                nonce, port, ip = HeaderF.extract(data)
+                ftable[nonce] = (ip, port)
+            if HeaderE.is_e(data):
+                # add encoded message to the buffer table
+                encoded_msg, nonce = HeaderE.extract(data)
+                msgbuffer[nonce] = encoded_msg
+            elif HeaderM.is_m(data):
+                msg = HeaderM.extract(data)[0]
                 print "FINAL NODE"
                 print msg
                 self.s.sendall("message received")
 
         self.on_close()
 
+    def forward_nonces(self):
+        for nonce in msgbuffer:
+            if ftable[nonce]:
+                # forward the message
+                encoded_msg = msgbuffer[nonce]
+                ip, port = ftable[nonce]
+                msg_and_h = HeaderE.add(encoded_msg, nonce)
+                temp_connection(ip, port, msg_and_h)
+                # delete the entries for nonce in the tables
+                del msgbuffer[nonce]
+                del ftable[nonce]
 
-    def temp_connection(self, data):
-        #print "DATA: \n", data
-        ip, port, msg = HeaderR.extract(HeaderR(), data)
+    def temp_connection(self, ip, port, msg):
         self.client = socket.socket()         # Create a socket object
         self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
         response = self.client.recv(buffer_size)
         print str(response)
         #self.s.sendall(key.encrypt(response))
+        self.s.sendall(response)
         self.client.close()                     # Close the socket when done
 
         
