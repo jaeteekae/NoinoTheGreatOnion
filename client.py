@@ -193,6 +193,7 @@ class TheServer:
                 encoded_msg, nonce, encoded_key = HeaderE.extract(data)
                 decoded_msg = key.decrypt((encoded_msg,))
                 decoded_key = key.decrypt((encoded_key,))
+                print "DECODED KEY:\n", decoded_key
                 if HeaderM.is_m(decoded_msg):
                     msg = HeaderM.extract(decoded_msg)[0]
                     print "FINAL NODE"
