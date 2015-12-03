@@ -35,7 +35,8 @@ class TheClient:
         self.lport = (sys.argv)[1]
         self.port = port
         self.client.connect((self.host, self.port))
-        msg = "PORT " + str((sys.argv)[1]) + "\n" + public_key.exportKey('PEM')
+        # msg = "PORT " + str((sys.argv)[1]) + "\n" + public_key.exportKey('PEM')
+        msg = HeaderP.add(str((sys.argv)[1]), public_key.exportKey('PEM'))
         self.client.sendall(msg) # tell the server what port the Client Server is listening on
 
     def main_loop(self):
@@ -165,8 +166,9 @@ class TheServer:
         # print "DATA: \n", data
         #TODO: DECRYPT HERE
         # here we can parse and/or modify the data before send forward
-        if data[0:5] == "PORTS":
-            self.client.ports = ast.literal_eval(data[5:])
+        if HeaderPB.is_pb(data):
+            str_ports = HeaderPB.extract(data)[0]
+            self.client.ports = ast.literal_eval(str_ports)
         # print "DATA: \n", data
         elif HeaderE.is_e(data):
             encoded_msg, nonce, encoded_key1, encoded_key2 = HeaderE.extract(data)

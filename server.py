@@ -73,7 +73,7 @@ class TheServer:
 
     def on_recv(self, sockfd):
         data = self.data
-        if data[0:4] == "PORT":
+        if HeaderP.is_p(data):
             self.add_port(sockfd, data)
         elif HeaderN.is_n(data):
             code = HeaderN.extract(data)
@@ -83,12 +83,12 @@ class TheServer:
                 self.nonce_returned(code[0])
 
     def add_port(self, sockfd, data):
-            port_and_key = parse("PORT {}\n{}", data).fixed
-            self.ports[str(sockfd)] = (sockfd.getsockname()[0], int(port_and_key[0]), port_and_key[1])
+            port, key = HeaderP.extract(data)
+            self.ports[str(sockfd)] = (sockfd.getsockname()[0], int(port), key)
             for client in self.ports.values():
                 self.client = socket.socket()
                 self.client.connect((client[0], client[1]))
-                self.client.sendall("PORTS" + str(self.ports))
+                self.client.sendall(HeaderPB.add(str(self.ports)))
                 self.client.close()
 
     def send_nonce(self, sockfd):

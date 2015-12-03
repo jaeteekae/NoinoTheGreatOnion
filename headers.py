@@ -71,3 +71,37 @@ class HeaderN:
             return True
         else:
             return False
+
+# Header Port: for sending the server the listening port and the public key
+class HeaderP:
+    @staticmethod
+    def add(port, key):
+        return "Port: " + port + "\nKey: " + key
+
+    @staticmethod
+    def extract(msg):
+        return parse("Port: {}\nKey: {}", msg)
+
+    @staticmethod
+    def is_p(msg):
+        if HeaderP.extract(msg):
+            return True
+        else:
+            return False
+
+# Header Port Broadcast: for broadcasting list of ports
+class HeaderPB:
+    @staticmethod
+    def add(ports):
+        return "Ports: " + ports
+
+    @staticmethod
+    def extract(msg):
+        return parse("Ports: {}", msg)
+
+    @staticmethod
+    def is_pb(msg):
+        if HeaderPB.extract(msg):
+            return True
+        else:
+            return False
