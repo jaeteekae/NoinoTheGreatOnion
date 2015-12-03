@@ -9,12 +9,12 @@ class HeaderM:
 
     # returns tuple of key and msg
     @staticmethod
-    def extract(self, msg):
+    def extract(msg):
         return parse("Message: {}", msg)
 
     @staticmethod
-    def is_m(self, msg):
-        if self.extract(msg):
+    def is_m(msg):
+        if HeaderM.extract(msg):
             return True
         else:
             return False
@@ -23,17 +23,17 @@ class HeaderM:
 class HeaderK:
     # returns header containing key + msg
     @staticmethod
-    def add(self, key, msg):
+    def add(key, msg):
         return "Key: " + key + "\nMessage: " + msg
 
     # returns tuple of key and msg
     @staticmethod
-    def extract(self, msg):
+    def extract(msg):
         return parse("Key: {}\nMessage: {}", msg)
 
     @staticmethod
-    def is_k(self, msg):
-        if self.extract(msg):
+    def is_k(msg):
+        if HeaderK.extract(msg):
             return True
         else:
             return False
@@ -42,17 +42,17 @@ class HeaderK:
 class HeaderR:
     # returns header containing IP address & port of next hop + msg
     @staticmethod
-    def add(self, ip, port, msg):
+    def add(ip, port, msg):
         return "IP: " + ip + "\nPort: " + port + "\nMessage: " + msg
 
     # returns tuple of IP, port, and msg
     @staticmethod
-    def extract(self, msg):
+    def extract(msg):
         return parse("IP: {}\nPort: {}\nMessage: {}", msg)
 
     @staticmethod
-    def is_r(self, msg):
-        if self.extract(msg):
+    def is_r(msg):
+        if HeaderR.extract(msg):
             return True
         else:
             return False
@@ -61,17 +61,17 @@ class HeaderR:
 class HeaderF:
     # returns header containing key + msg
     @staticmethod
-    def add(self, nonce, port, ip):
+    def add(nonce, port, ip):
         return "Nonce: " + nonce + "\nPort: " + port + "\nIP: " + ip
 
     # returns tuple of key and msg
     @staticmethod
-    def extract(self, msg):
+    def extract(msg):
         return parse("Nonce: {}\nPort: {}\nIP: {}", msg)
 
     @staticmethod
-    def is_f(self, msg):
-        if self.extract(msg):
+    def is_f(msg):
+        if HeaderF.extract(msg):
             return True
         else:
             return False
@@ -80,17 +80,17 @@ class HeaderF:
 class HeaderE:
     # returns header containing key + msg
     @staticmethod
-    def add(self, enc, nonce):
+    def add(enc, nonce):
         return "Enc: " + enc + "\nNonce: " + nonce
 
     # returns tuple of key and msg
     @staticmethod
-    def extract(self, msg):
+    def extract(msg):
         return parse("Enc: {}\nNonce: {}", msg)
 
     @staticmethod
-    def is_e(self, msg):
-        if self.extract(msg):
+    def is_e(msg):
+        if HeaderE.extract(msg):
             return True
         else:
             return False
@@ -99,17 +99,17 @@ class HeaderE:
 class HeaderN:
     # returns header containing key + msg
     @staticmethod
-    def add(self, nonce):
+    def add(nonce):
         return "Nonce: " + nonce
 
     # returns tuple of key and msg
     @staticmethod
-    def extract(self, msg):
+    def extract(msg):
         return parse("Nonce: {}", msg)
 
     @staticmethod
-    def is_n(self, msg):
-        if self.extract(msg):
+    def is_n(msg):
+        if HeaderN.extract(msg):
             return True
         else:
             return False

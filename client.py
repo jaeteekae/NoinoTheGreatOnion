@@ -71,12 +71,13 @@ class TheClient:
             path.append(self.ports.values()[node])
             i = i + 1
         #print path
-        msg = HeaderN.add(HeaderN(), str(-1))
+        msg = HeaderN.add("-1")
         self.sender = socket.socket()
         self.sender.connect((self.host, self.port))
         self.sender.sendall(msg)
         self.response = self.sender.recv(buffer_size)
-        nonce = HeaderN.extract(HeaderN(), self.response)[0]
+        self.sender.close()
+        nonce = HeaderN.extract(self.response)[0]
         print nonce
         # enc_msg = HeaderE.add(HeaderE(), str(data) +)
 
@@ -90,24 +91,41 @@ class TheClient:
             # full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg[0])
 
         # print str(full)
-        step = path.pop()
+        n1 = path[0]
+        n2 = path[1]
+        n3 = path[2]
+
+        m1to2 = HeaderF.add(nonce, str(n2[1]), str(n2[0]))
+        m2to3 = HeaderF.add(nonce, str(n3[1]), str(n3[0]))
+        enc_msg = HeaderE.add(HeaderM.add(data), nonce)
 
         # tmp_key = RSA.importKey(step[2])
         # print "TMP_KEY: ",step[2]
         # msg = tmp_key.encrypt(str(full), 32)
+
         self.sender = socket.socket()
-        self.sender.connect((step[0], step[1]))
-        self.sender.sendall(str(msg))
-        # print str(msg)
+        self.sender.connect((n2[0], n2[1]))
+        self.sender.sendall(str(m2to3))
+        self.sender.close()
+
+        self.sender = socket.socket()
+        self.sender.connect((n1[0], n1[1]))
+        self.sender.sendall(str(m1to2))
+        self.sender.sendall(str(enc_msg))
         self.response = self.sender.recv(buffer_size)
         print str(self.response)
+        self.sender.close()
+    
+        self.sender = socket.socket()
+        self.sender.connect((self.host, self.port))
+        self.sender.sendall(HeaderN.add(nonce))
         self.sender.close()
         
 
 class TheServer:
     input_list = []
-    ftable{} # forwarding table: [nonce]=(ip, port)
-    msgbuffer{} # buffer for HeaderE messages: [nonce]=encoded_msg
+    ftable = {} # forwarding table: [nonce]=(ip, port)
+    msgbuffer = {} # buffer for HeaderE messages: [nonce]=encoded_msg
 
     def __init__(self, host, port, client):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -157,35 +175,36 @@ class TheServer:
             self.client.ports = ast.literal_eval(data[5:])
         else:
             print "ENC DATA:\n", self.data
-            data = key.decrypt(self.data)
+            # data = key.decrypt(self.data)
             print "DATA: \n", data
             if HeaderF.is_f(data):
                 # add nonce to the forwarding table
                 nonce, port, ip = HeaderF.extract(data)
-                ftable[nonce] = (ip, port)
-            if HeaderE.is_e(data):
+                self.ftable[nonce] = (ip, port)
+            elif HeaderE.is_e(data):
                 # add encoded message to the buffer table
                 encoded_msg, nonce = HeaderE.extract(data)
-                msgbuffer[nonce] = encoded_msg
-            elif HeaderM.is_m(data):
-                msg = HeaderM.extract(data)[0]
-                print "FINAL NODE"
-                print msg
-                self.s.sendall("message received")
+                if HeaderM.is_m(encoded_msg):
+                    msg = HeaderM.extract(data)[0]
+                    print "FINAL NODE"
+                    print msg
+                    self.s.sendall("message received")
+                else:
+                    self.msgbuffer[nonce] = encoded_msg
 
         self.on_close()
 
     def forward_nonces(self):
-        for nonce in msgbuffer:
-            if ftable[nonce]:
+        for nonce in self.msgbuffer:
+            if self.ftable[nonce]:
                 # forward the message
-                encoded_msg = msgbuffer[nonce]
-                ip, port = ftable[nonce]
+                encoded_msg = self.msgbuffer[nonce]
+                ip, port = self.ftable[nonce]
                 msg_and_h = HeaderE.add(encoded_msg, nonce)
                 temp_connection(ip, port, msg_and_h)
                 # delete the entries for nonce in the tables
-                del msgbuffer[nonce]
-                del ftable[nonce]
+                del self.msgbuffer[nonce]
+                del self.ftable[nonce]
 
     def temp_connection(self, ip, port, msg):
         self.client = socket.socket()         # Create a socket object

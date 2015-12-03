@@ -80,8 +80,8 @@ class TheServer:
         #if request.command == "GET":
         if data[0:4] == "PORT":
             self.add_port(sockfd, data)
-        elif HeaderN.is_n(HeaderN(), data):
-            code = HeaderN.extract(HeaderN(), data)
+        elif HeaderN.is_n(data):
+            code = HeaderN.extract(data)
             print "CODE: ", code[0]
             if code[0] == "-1":
                 self.send_nonce(sockfd)
@@ -101,7 +101,7 @@ class TheServer:
             nonce = random.choice(tuple(self.available_nonces))
             self.available_nonces.remove(nonce)
             print str(nonce)
-            msg = HeaderN.add(HeaderN(), str(nonce))
+            msg = HeaderN.add(str(nonce))
             sockfd.sendall(msg)
 
     def nonce_returned(self, nonce):
