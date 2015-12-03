@@ -31,11 +31,10 @@ class TheClient:
     def __init__(self, port):
         self.client = socket.socket()         # Create a socket object
         self.host = socket.gethostname() # Get local machine name
-        self.IP = socket.gethostbyname(self.host)
+        self.IP = (sys.argv)[3]
         self.lport = (sys.argv)[1]
         self.port = port
-        self.client.connect((self.host, self.port))
-        # msg = "PORT " + str((sys.argv)[1]) + "\n" + public_key.exportKey('PEM')
+        self.client.connect((self.IP, self.port))
         msg = HeaderP.add(str((sys.argv)[1]), public_key.exportKey('PEM'))
         self.client.sendall(msg) # tell the server what port the Client Server is listening on
 
