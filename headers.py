@@ -80,13 +80,13 @@ class HeaderF:
 class HeaderE:
     # returns header containing key + msg
     @staticmethod
-    def add(enc, nonce, pk):
-        return "Enc: " + enc + "\nNonce: " + nonce + "\nPublic Key: " + pk
+    def add(enc, nonce, pk1, pk2):
+        return "Enc: " + enc + "\nNonce: " + nonce + "\nPK1: " + pk1 + "\nPK2: " + pk2
 
     # returns tuple of key and msg
     @staticmethod
     def extract(msg):
-        return parse("Enc: {}\nNonce: {}\nPublic Key: {}", msg)
+        return parse("Enc: {}\nNonce: {}\nPK1: {}\nPK2: {}", msg)
 
     @staticmethod
     def is_e(msg):

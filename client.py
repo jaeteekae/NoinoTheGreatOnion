@@ -142,7 +142,7 @@ class TheClient:
 class TheServer:
     input_list = []
     ftable = {} # forwarding table: [nonce]=(ip, port)
-    msgbuffer = {} # buffer for HeaderE messages: [nonce]=(encoded_msg, public_key)
+    msgbuffer = {} # buffer for HeaderE messages: [nonce]=(encoded_msg, pk1, pk2)
 
     def __init__(self, host, port, client):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -190,32 +190,31 @@ class TheServer:
         # here we can parse and/or modify the data before send forward
         if data[0:5] == "PORTS":
             self.client.ports = ast.literal_eval(data[5:])
-        else:
-            # print "ENC DATA:\n", self.data
-            # data = key.decrypt(self.data)
-            print "DATA: \n", data
-            if HeaderE.is_e(data):
-                encoded_msg, nonce, encoded_key = HeaderE.extract(data)
-                decoded_msg = key.decrypt((encoded_msg,))
-                decoded_key = key.decrypt((encoded_key,))
-                if HeaderM.is_m(decoded_msg):
-                    msg = HeaderM.extract(decoded_msg)[0]
-                    print "FINAL NODE"
-                    print msg
-                    response = "message received"
-                    pk = RSA.importKey(decoded_key)
-                    encoded_response = pk.encrypt(response, 32)[0]
-                    self.s.sendall(encoded_response)
-                    #self.s.sendall("message received")
-                else:
-                    # add partially decoded message & key to the buffer table
-                    self.msgbuffer[nonce] = (decoded_msg, decoded_key)
+        # print "DATA: \n", data
+        elif HeaderE.is_e(data):
+            encoded_msg, nonce, encoded_key1, encoded_key2 = HeaderE.extract(data)
+            decoded_msg = key.decrypt((encoded_msg,))
+            decoded_key1 = key.decrypt((encoded_key1,))
+            decoded_key2 = key.decrypt((encoded_key2,))
+            print "DECODED KEY:\n", decoded_key1 + decoded_key2
+            if HeaderM.is_m(decoded_msg):
+                msg = HeaderM.extract(decoded_msg)[0]
+                print "FINAL NODE"
+                print msg
+                response = "message received"
+                pk = RSA.importKey(decoded_key1 + decoded_key2)
+                encoded_response = pk.encrypt(response, 32)[0]
+                self.s.sendall(encoded_response)
+                #self.s.sendall("message received")
             else:
-                decoded_msg = key.decrypt((data,))
-                if HeaderF.is_f(decoded_msg):
-                    # add nonce to the forwarding table
-                    nonce, port, ip = HeaderF.extract(decoded_msg)
-                    self.ftable[nonce] = (ip, port)
+                # add partially decoded message & key to the buffer table
+                self.msgbuffer[nonce] = (decoded_msg, decoded_key1, decoded_key2)
+        else:
+            decoded_msg = key.decrypt((data,))
+            if HeaderF.is_f(decoded_msg):
+                # add nonce to the forwarding table
+                nonce, port, ip = HeaderF.extract(decoded_msg)
+                self.ftable[nonce] = (ip, port)
             
 
         self.on_close()
@@ -227,9 +226,9 @@ class TheServer:
         for nonce in self.msgbuffer:
             if self.ftable[nonce]:
                 # forward the message
-                encoded_msg, encoded_key = self.msgbuffer[nonce]
+                encoded_msg, encoded_key1, encoded_key2 = self.msgbuffer[nonce]
                 ip, port = self.ftable[nonce]
-                msg_and_h = HeaderE.add(encoded_msg, nonce, encoded_key)
+                msg_and_h = HeaderE.add(encoded_msg, nonce, encoded_key1, encoded_key2)
                 self.temp_connection(ip, port, msg_and_h)
                 # delete the entries for nonce in the tables
                 sent.append(nonce)
@@ -245,7 +244,7 @@ class TheServer:
         #encoded_response = key.encrypt(response, 32)[0]
         #print str(response)
         self.s.sendall(response)
-        self.s.sendall(encoded_response)
+        #self.s.sendall(encoded_response)
         self.client.close()                     # Close the socket when done
 
         
