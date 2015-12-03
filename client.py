@@ -11,6 +11,7 @@ import random
 import threading
 import ast
 import time
+import requests
 from headers import *
 from netaddr import *
 from parse import *
