@@ -45,3 +45,18 @@ class HeaderR:
             return True
         else:
             return False
+
+class HeaderF:
+    # returns header containing key + msg
+    def add(self, nonce, port, ip):
+        return "Nonce: " + nonce + "\nPort: " + port + "\nIP: " + ip
+
+    # returns tuple of key and msg
+    def extract(self, msg):
+        return parse("Nonce: {}\nPort: {}\nIP: {}", msg)
+
+    def is_f(self, msg):
+        if self.extract(msg):
+            return True
+        else:
+            return False
