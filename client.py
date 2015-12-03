@@ -106,12 +106,15 @@ class TheClient:
         self.sender = socket.socket()
         self.sender.connect((n2[0], n2[1]))
         self.sender.sendall(str(m2to3))
+        print "M2TO3: ", str(m2to3)
         self.sender.close()
 
         self.sender = socket.socket()
         self.sender.connect((n1[0], n1[1]))
         self.sender.sendall(str(m1to2))
+        print "M1TO2: ", str(m1to2)
         self.sender.sendall(str(enc_msg))
+        print "ENCODED MESSAGE: ", enc_msg
         self.response = self.sender.recv(buffer_size)
         print str(self.response)
         self.sender.close()
@@ -168,13 +171,13 @@ class TheServer:
         # global ports
         #print "ENC DATA:\n", self.data
         data = self.data
-        #print "DATA: \n", data
+        # print "DATA: \n", data
         #TODO: DECRYPT HERE
         # here we can parse and/or modify the data before send forward
         if data[0:5] == "PORTS":
             self.client.ports = ast.literal_eval(data[5:])
         else:
-            print "ENC DATA:\n", self.data
+            # print "ENC DATA:\n", self.data
             # data = key.decrypt(self.data)
             print "DATA: \n", data
             if HeaderF.is_f(data):
