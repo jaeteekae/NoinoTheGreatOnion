@@ -183,21 +183,27 @@ class TheServer:
             # print "ENC DATA:\n", self.data
             # data = key.decrypt(self.data)
             print "DATA: \n", data
-            if HeaderF.is_f(data):
-                # add nonce to the forwarding table
-                nonce, port, ip = HeaderF.extract(data)
-                self.ftable[nonce] = (ip, port)
-            elif HeaderE.is_e(data):
-                # add encoded message to the buffer table
+            if HeaderE.is_e(data):
                 encoded_msg, nonce = HeaderE.extract(data)
-                encoded_msg = encoded_msg[1:]
-                if HeaderM.is_m(encoded_msg):
-                    msg = HeaderM.extract(encoded_msg)[0]
+                decoded_msg = key.decrypt((encoded_msg,))
+                if HeaderM.is_m(decoded_msg):
+                    msg = HeaderM.extract(decoded_msg)[0]
                     print "FINAL NODE"
                     print msg
+                    response = "message received"
+                    encoded_response = key.encrypt(response, 32)[0]
+                    #self.s.sendall(encoded_response)
                     self.s.sendall("message received")
                 else:
-                    self.msgbuffer[nonce] = encoded_msg
+                    # add partially decoded message to the buffer table
+                    self.msgbuffer[nonce] = decoded_msg
+            else:
+                decoded_msg = key.decrypt((data,))
+                if HeaderF.is_f(decoded_msg):
+                    # add nonce to the forwarding table
+                    nonce, port, ip = HeaderF.extract(decoded_msg)
+                    self.ftable[nonce] = (ip, port)
+            
 
         self.on_close()
 
@@ -223,9 +229,10 @@ class TheServer:
         self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
         response = self.client.recv(buffer_size)
+        encoded_response = key.encrypt(response, 32)[0]
         print str(response)
-        #self.s.sendall(key.encrypt(response))
         self.s.sendall(response)
+        #self.s.sendall(encoded_response)
         self.client.close()                     # Close the socket when done
 
         
