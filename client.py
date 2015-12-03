@@ -66,7 +66,7 @@ class TheClient:
     def send_msg(self, data, path):
         # send HeaderN with -1 to indicate need for new nonce
         msg = HeaderN.add("-1")
-        self.response = self.temp_connection_with_response(self.host, self.port, msg)
+        self.response = self.temp_connection_with_response(self.IP, self.port, msg)
         nonce = HeaderN.extract(self.response)[0]
 
         n1 = path[0]
@@ -98,7 +98,7 @@ class TheClient:
         self.response = self.temp_connection_with_response(n1[0], n1[1], str(enc_msg))
         self.response = key.decrypt((self.response,))
         print str(self.response)
-        self.temp_connection_no_response(self.host, self.port, HeaderN.add(nonce))
+        self.temp_connection_no_response(self.IP, self.port, HeaderN.add(nonce))
         
     # establish temporary connection to send message to server at (ip, port)
     def temp_connection_no_response(self, ip, port, msg):
