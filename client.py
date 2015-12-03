@@ -136,7 +136,7 @@ class TheClient:
 class TheServer:
     input_list = []
     ftable = {} # forwarding table: [nonce]=(ip, port)
-    msgbuffer = {} # buffer for HeaderE messages: [nonce]=encoded_msg
+    msgbuffer = {} # buffer for HeaderE messages: [nonce]=(encoded_msg, public_key)
 
     def __init__(self, host, port, client):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -189,19 +189,21 @@ class TheServer:
             # data = key.decrypt(self.data)
             print "DATA: \n", data
             if HeaderE.is_e(data):
-                encoded_msg, nonce = HeaderE.extract(data)
+                encoded_msg, nonce, encoded_key = HeaderE.extract(data)
                 decoded_msg = key.decrypt((encoded_msg,))
+                decoded_key = key.decrypt((encoded_key,))
                 if HeaderM.is_m(decoded_msg):
                     msg = HeaderM.extract(decoded_msg)[0]
                     print "FINAL NODE"
                     print msg
                     response = "message received"
-                    encoded_response = key.encrypt(response, 32)[0]
+                    pk = RSA.importKey(decoded_key)
+                    encoded_response = pk.encrypt(response, 32)[0]
                     self.s.sendall(encoded_response)
                     #self.s.sendall("message received")
                 else:
-                    # add partially decoded message to the buffer table
-                    self.msgbuffer[nonce] = decoded_msg
+                    # add partially decoded message & key to the buffer table
+                    self.msgbuffer[nonce] = (decoded_msg, decoded_key)
             else:
                 decoded_msg = key.decrypt((data,))
                 if HeaderF.is_f(decoded_msg):
@@ -219,9 +221,9 @@ class TheServer:
         for nonce in self.msgbuffer:
             if self.ftable[nonce]:
                 # forward the message
-                encoded_msg = self.msgbuffer[nonce]
+                encoded_msg, encoded_key = self.msgbuffer[nonce]
                 ip, port = self.ftable[nonce]
-                msg_and_h = HeaderE.add(encoded_msg, nonce)
+                msg_and_h = HeaderE.add(encoded_msg, nonce, encoded_key)
                 self.temp_connection(ip, port, msg_and_h)
                 # delete the entries for nonce in the tables
                 sent.append(nonce)
@@ -234,9 +236,9 @@ class TheServer:
         self.client.connect((str(IPAddress(ip)), int(port)))
         self.client.sendall(msg) 
         response = self.client.recv(buffer_size)
-        encoded_response = key.encrypt(response, 32)[0]
+        #encoded_response = key.encrypt(response, 32)[0]
         #print str(response)
-        #self.s.sendall(response)
+        self.s.sendall(response)
         self.s.sendall(encoded_response)
         self.client.close()                     # Close the socket when done
 
