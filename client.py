@@ -114,9 +114,9 @@ class TheClient:
         self.temp_connection_no_response(n2[0], n2[1], str(m2to3))
         self.temp_connection_no_response(n1[0], n1[1], str(m1to2))
         self.response = self.temp_connection_with_response(n1[0], n1[1], str(enc_msg))
-        self.response = n3_key.decrypt((self.response,))
-        self.response = n2_key.decrypt((self.response,))
-        self.response = n1_key.decrypt((self.response,))
+        self.response = key.decrypt((self.response,))
+        self.response = key.decrypt((self.response,))
+        self.response = key.decrypt((self.response,))
         print str(self.response)
         self.temp_connection_no_response(self.host, self.port, HeaderN.add(nonce))
         
