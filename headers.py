@@ -48,7 +48,7 @@ class HeaderR:
         else:
             return False
 
-# Header Forward
+# Header Forward: tells a node where to forward the nonce-message
 class HeaderF:
     # returns header containing key + msg
     def add(self, nonce, port, ip):
@@ -64,6 +64,7 @@ class HeaderF:
         else:
             return False
 
+# Header Encrypted (x3) Message + Nonce
 class HeaderE:
     # returns header containing key + msg
     def add(self, enc, nonce):
@@ -79,6 +80,7 @@ class HeaderE:
         else:
             return False
 
+# Header Nonce: for querying the server for an unused nonce
 class HeaderN:
     # returns header containing key + msg
     def add(self, nonce):
