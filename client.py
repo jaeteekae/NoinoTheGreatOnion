@@ -93,10 +93,17 @@ class TheClient:
         n1 = path[0]
         n2 = path[1]
         n3 = path[2]
+        n1_key = RSA.importKey(n1[2])
+        n2_key = RSA.importKey(n2[2])
+        n3_key = RSA.importKey(n3[2])
 
-        m1to2 = HeaderF.add(nonce, str(n2[1]), str(n2[0]))
-        m2to3 = HeaderF.add(nonce, str(n3[1]), str(n3[0]))
-        enc_msg = HeaderE.add('111' + HeaderM.add(data), nonce)
+        m1to2 = n1_key.encrypt(HeaderF.add(nonce, str(n2[1]), str(n2[0])), 32)[0]
+        m2to3 = n2_key.encrypt(HeaderF.add(nonce, str(n3[1]), str(n3[0])), 32)[0]
+        enc_msg = n3_key.encrypt(HeaderE.add(HeaderM.add(data), nonce), 32)[0]
+        enc_msg = n2_key.encrypt(enc_msg, 32)[0]
+        enc_msg = n1_key.encrypt(enc_msg, 32)[0]
+
+
 
         # tmp_key = RSA.importKey(step[2])
         # print "TMP_KEY: ",step[2]
