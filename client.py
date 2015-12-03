@@ -11,7 +11,7 @@ import random
 import threading
 import ast
 import time
-from headers import HeaderK, HeaderR, HeaderM
+from headers import HeaderK, HeaderR, HeaderM, HeaderF
 from netaddr import *
 from parse import *
 from Crypto.PublicKey import RSA
@@ -140,11 +140,13 @@ class TheServer:
         if data[0:5] == "PORTS":
             self.client.ports = ast.literal_eval(data[5:])
         else:
-            print "ENC DATA:\n", self.data
-            data = key.decrypt(self.data)
+            #print "ENC DATA:\n", self.data
+            #data = key.decrypt(self.data)
             print "DATA: \n", data
             if HeaderR.is_r(HeaderR(), data):
                 self.temp_connection(data)
+            if HeaderF.is_f(HeaderF(), data):
+                
             elif HeaderM.is_m(HeaderM(), data):
                 msg = HeaderM.extract(HeaderM(), data)
                 print "FINAL NODE"
