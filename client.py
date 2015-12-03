@@ -96,16 +96,21 @@ class TheClient:
         n1_key = RSA.importKey(n1[2])
         n2_key = RSA.importKey(n2[2])
         n3_key = RSA.importKey(n3[2])
+        exp_key = public_key.exportKey('PEM')
+        half1, half2 = exp_key[:len(exp_key)/2], exp_key[len(exp_key)/2:]
 
         m1to2 = n1_key.encrypt(HeaderF.add(nonce, str(n2[1]), str(n2[0])), 32)[0]
         m2to3 = n2_key.encrypt(HeaderF.add(nonce, str(n3[1]), str(n3[0])), 32)[0]
         enc_msg = n3_key.encrypt(HeaderM.add(data), 32)[0]
-        enc_key = n3_key.encrypt(public_key.exportKey('PEM'), 32)[0]
+        enc_key1 = n3_key.encrypt(half1, 32)[0]
+        enc_key2 = n3_key.encrypt(half2, 32)[0]
         enc_msg = n2_key.encrypt(enc_msg, 32)[0]
-        enc_key = n2_key.encrypt(enc_key, 32)[0]
+        enc_key1 = n2_key.encrypt(enc_key1, 32)[0]
+        enc_key2 = n2_key.encrypt(enc_key2, 32)[0]
         enc_msg = n1_key.encrypt(enc_msg, 32)[0]
-        enc_key = n1_key.encrypt(enc_key, 32)[0]
-        enc_msg = HeaderE.add(enc_msg, nonce, enc_key)
+        enc_key1 = n1_key.encrypt(enc_key1, 32)[0]
+        enc_key2 = n1_key.encrypt(enc_key2, 32)[0]
+        enc_msg = HeaderE.add(enc_msg, nonce, enc_key1, enc_key2)
 
 
 
