@@ -70,13 +70,12 @@ class TheClient:
                 continue
             path.append(self.ports.values()[node])
             i = i + 1
-        #print path
+        self.send_msg(data, path)
+
+
+    def send_msg(self, data, path):
         msg = HeaderN.add("-1")
-        self.sender = socket.socket()
-        self.sender.connect((self.host, self.port))
-        self.sender.sendall(msg)
-        self.response = self.sender.recv(buffer_size)
-        self.sender.close()
+        self.response = self.temp_connection_with_response(self.host, self.port, msg)
         nonce = HeaderN.extract(self.response)[0]
         print nonce
         # enc_msg = HeaderE.add(HeaderE(), str(data) +)
@@ -103,29 +102,26 @@ class TheClient:
         # print "TMP_KEY: ",step[2]
         # msg = tmp_key.encrypt(str(full), 32)
 
-        self.sender = socket.socket()
-        self.sender.connect((n2[0], n2[1]))
-        self.sender.sendall(str(m2to3))
-        self.sender.close()
-
-        self.sender = socket.socket()
-        self.sender.connect((n1[0], n1[1]))
-        self.sender.sendall(str(m1to2))
-        self.sender.close()
-
-
-        self.sender = socket.socket()
-        self.sender.connect((n1[0], n1[1]))
-        self.sender.sendall(str(enc_msg))
-        self.response = self.sender.recv(buffer_size)
+        self.temp_connection_no_response(n2[0], n2[1], str(m2to3))
+        self.temp_connection_no_response(n1[0], n1[1], str(m1to2))
+        self.response = self.temp_connection_with_response(n1[0], n1[1], str(enc_msg))
         print str(self.response)
-        self.sender.close()
-    
-        self.sender = socket.socket()
-        self.sender.connect((self.host, self.port))
-        self.sender.sendall(HeaderN.add(nonce))
-        self.sender.close()
+        self.temp_connection_no_response(self.host, self.port, HeaderN.add(nonce))
         
+    def temp_connection_no_response(self, ip, port, msg):
+        self.sender = socket.socket()    
+        self.sender.connect((ip, port))
+        self.sender.sendall(msg)
+        self.sender.close()
+
+    def temp_connection_with_response(self, ip, port, msg):
+        self.sender = socket.socket()    
+        self.sender.connect((ip, port))
+        self.sender.sendall(msg)
+        response = self.sender.recv(buffer_size)
+        self.sender.close()
+        return response
+
 
 class TheServer:
     input_list = []
