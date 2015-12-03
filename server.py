@@ -96,10 +96,12 @@ class TheServer:
             self.client.close()
 
     def send_nonce(self, sockfd):
-        nonce = random.choice(tuple(self.available_nonces))
-        self.available_nonces.remove(nonce)
-        msg = HeaderN.add(str(nonce))
-        sockfd.sendall(msg)
+            nonce = random.choice(tuple(self.available_nonces))
+            self.available_nonces.remove(nonce)
+            msg = HeaderN.add(str(nonce))
+            sockfd.sendall(msg)
+            sockfd.close()
+            self.on_close()
 
     def nonce_returned(self, nonce):
         self.available_nonces.add(nonce)
