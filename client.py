@@ -34,22 +34,16 @@ class TheClient:
         self.IP = socket.gethostbyname(self.host)
         self.lport = (sys.argv)[1]
         self.port = port
-        print self.host
-        print self.port
-        #print "---EXPORTED KEY---\n", self.public_key.exportKey('PEM')
         self.client.connect((self.host, self.port))
-        # print "PUBLIC KEY: ",public_key.exportKey('PEM')
         msg = "PORT " + str((sys.argv)[1]) + "\n" + public_key.exportKey('PEM')
-        #print msg
         self.client.sendall(msg) # tell the server what port the Client Server is listening on
-        #s.close                     # Close the socket when done
 
     def main_loop(self):
         while 1:
             msg = sys.stdin.readline()
             self.create_path(msg)
-            # print self.client.recv(1024)
 
+    # select a transmission path from all connected clients, then send data on path
     def create_path(self, data):
         indexes = set(range(len(self.ports)))
         path = []
@@ -62,34 +56,19 @@ class TheClient:
             node = random.choice(tuple(indexes))
             indexes.remove(node)
             if (str(self.ports.values()[node][0]) == str(self.IP)) and (str(self.ports.values()[node][1]) == str(self.lport)): # if node is that of transmitting client
-                # my_key = RSA.importKey(self.ports.values()[node][2])
-                # enc_data = my_key.encrypt('abcdefgh', 32)
-                # print "ENC : "
-                # print enc_data
-                # print "DECRYPTED : " + key.decrypt(enc_data)
                 continue
             path.append(self.ports.values()[node])
             i = i + 1
         self.send_msg(data, path)
 
 
+    # given data and a three node path, send the data along that path with encryption
     def send_msg(self, data, path):
+        # send HeaderN with -1 to indicate need for new nonce
         msg = HeaderN.add("-1")
         self.response = self.temp_connection_with_response(self.host, self.port, msg)
         nonce = HeaderN.extract(self.response)[0]
-        print nonce
-        # enc_msg = HeaderE.add(HeaderE(), str(data) +)
 
-
-            # print str(full)
-            # step = path.pop()
-            #print "----STEP 2----\n", step[2]
-            # tmp_key = RSA.importKey(step[2])
-            # print "TMP_KEY: ",step[2]
-            # msg = tmp_key.encrypt(str(full), 32)
-            # full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg[0])
-
-        # print str(full)
         n1 = path[0]
         n2 = path[1]
         n3 = path[2]
@@ -99,6 +78,7 @@ class TheClient:
         exp_key = public_key.exportKey('PEM')
         half1, half2 = exp_key[:len(exp_key)/2], exp_key[len(exp_key)/2:]
 
+        # do all of the encryption before sending
         m1to2 = n1_key.encrypt(HeaderF.add(nonce, str(n2[1]), str(n2[0])), 32)[0]
         m2to3 = n2_key.encrypt(HeaderF.add(nonce, str(n3[1]), str(n3[0])), 32)[0]
         enc_msg = n3_key.encrypt(HeaderM.add(data), 32)[0]
@@ -112,12 +92,7 @@ class TheClient:
         enc_key2 = n1_key.encrypt(enc_key2, 32)[0]
         enc_msg = HeaderE.add(enc_msg, nonce, enc_key1, enc_key2)
 
-
-
-        # tmp_key = RSA.importKey(step[2])
-        # print "TMP_KEY: ",step[2]
-        # msg = tmp_key.encrypt(str(full), 32)
-
+        # send all three messages
         self.temp_connection_no_response(n2[0], n2[1], str(m2to3))
         self.temp_connection_no_response(n1[0], n1[1], str(m1to2))
         self.response = self.temp_connection_with_response(n1[0], n1[1], str(enc_msg))
@@ -125,12 +100,14 @@ class TheClient:
         print str(self.response)
         self.temp_connection_no_response(self.host, self.port, HeaderN.add(nonce))
         
+    # establish temporary connection to send message to server at (ip, port)
     def temp_connection_no_response(self, ip, port, msg):
         self.sender = socket.socket()    
         self.sender.connect((ip, port))
         self.sender.sendall(msg)
         self.sender.close()
 
+    # establish temporary connection to send and receive a message from server at (ip, port)
     def temp_connection_with_response(self, ip, port, msg):
         self.sender = socket.socket()    
         self.sender.connect((ip, port))

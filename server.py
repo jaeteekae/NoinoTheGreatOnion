@@ -66,23 +66,17 @@ class TheServer:
 
     def on_accept(self):
         clientsock, clientaddr = self.server.accept()
-        # print clientaddr, "has connected"
         self.input_list.append(clientsock)
 
     def on_close(self):
-        # print self.s.getpeername(), "has disconnected"
         self.input_list.remove(self.s)
 
     def on_recv(self, sockfd):
         data = self.data
-        # here we can parse and/or modify the data before send forward
-        print data
-        #if request.command == "GET":
         if data[0:4] == "PORT":
             self.add_port(sockfd, data)
         elif HeaderN.is_n(data):
             code = HeaderN.extract(data)
-            print "CODE: ", code[0]
             if code[0] == "-1":
                 self.send_nonce(sockfd)
             else:
@@ -100,7 +94,6 @@ class TheServer:
     def send_nonce(self, sockfd):
             nonce = random.choice(tuple(self.available_nonces))
             self.available_nonces.remove(nonce)
-            print str(nonce)
             msg = HeaderN.add(str(nonce))
             sockfd.sendall(msg)
 
