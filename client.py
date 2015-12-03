@@ -102,7 +102,9 @@ class TheClient:
         enc_msg = n3_key.encrypt(HeaderM.add(data), 32)[0]
         enc_key = n3_key.encrypt(public_key.exportKey('PEM'), 32)[0]
         enc_msg = n2_key.encrypt(enc_msg, 32)[0]
+        enc_key = n2_key.encrypt(enc_key, 32)[0]
         enc_msg = n1_key.encrypt(enc_msg, 32)[0]
+        enc_key = n1_key.encrypt(enc_key, 32)[0]
         enc_msg = HeaderE.add(enc_msg, nonce, enc_key)
 
 
@@ -114,8 +116,6 @@ class TheClient:
         self.temp_connection_no_response(n2[0], n2[1], str(m2to3))
         self.temp_connection_no_response(n1[0], n1[1], str(m1to2))
         self.response = self.temp_connection_with_response(n1[0], n1[1], str(enc_msg))
-        self.response = key.decrypt((self.response,))
-        self.response = key.decrypt((self.response,))
         self.response = key.decrypt((self.response,))
         print str(self.response)
         self.temp_connection_no_response(self.host, self.port, HeaderN.add(nonce))
