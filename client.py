@@ -11,7 +11,7 @@ import random
 import threading
 import ast
 import time
-from headers import HeaderK, HeaderR, HeaderM, HeaderF
+from headers import *
 from netaddr import *
 from parse import *
 from Crypto.PublicKey import RSA
@@ -25,16 +25,19 @@ class TheClient:
     IP = ''
     lport = 0
     ports = {}
+    host = 0
+    port = 0
 
     def __init__(self, port):
         self.client = socket.socket()         # Create a socket object
-        host = socket.gethostname() # Get local machine name
-        self.IP = socket.gethostbyname(host)
+        self.host = socket.gethostname() # Get local machine name
+        self.IP = socket.gethostbyname(self.host)
         self.lport = (sys.argv)[1]
-        print host
-        print port
+        self.port = port
+        print self.host
+        print self.port
         #print "---EXPORTED KEY---\n", self.public_key.exportKey('PEM')
-        self.client.connect((host, port))
+        self.client.connect((self.host, self.port))
         # print "PUBLIC KEY: ",public_key.exportKey('PEM')
         msg = "PORT " + str((sys.argv)[1]) + "\n" + public_key.exportKey('PEM')
         #print msg
@@ -68,22 +71,29 @@ class TheClient:
             path.append(self.ports.values()[node])
             i = i + 1
         #print path
+        msg = HeaderN.add(HeaderN(), str(-1))
+        self.sender = socket.socket()
+        self.sender.connect((self.host, self.port))
+        self.sender.sendall(msg)
+        self.response = self.sender.recv(buffer_size)
+        nonce = HeaderN.extract(HeaderN(), self.response)[0]
+        print nonce
+        # enc_msg = HeaderE.add(HeaderE(), str(data) +)
 
-        full = HeaderM.add(HeaderM(), str(data))
-
-        while len(path) > 1:
+        # while len(path) > 1:
             # print str(full)
-            step = path.pop()
+            # step = path.pop()
             #print "----STEP 2----\n", step[2]
-            tmp_key = RSA.importKey(step[2])
+            # tmp_key = RSA.importKey(step[2])
             # print "TMP_KEY: ",step[2]
-            msg = tmp_key.encrypt(str(full), 32)
-            full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg[0])
+            # msg = tmp_key.encrypt(str(full), 32)
+            # full = HeaderR.add(HeaderR(), str(step[0]), str(step[1]), msg[0])
         # print str(full)
         step = path.pop()
-        tmp_key = RSA.importKey(step[2])
+
+        # tmp_key = RSA.importKey(step[2])
         # print "TMP_KEY: ",step[2]
-        msg = tmp_key.encrypt(str(full), 32)
+        # msg = tmp_key.encrypt(str(full), 32)
         self.sender = socket.socket()
         self.sender.connect((step[0], step[1]))
         self.sender.sendall(str(msg))
@@ -95,8 +105,6 @@ class TheClient:
 
 class TheServer:
     input_list = []
-    # forwarding table: [nonce]=(ip, port)
-    ftable{}
 
     def __init__(self, host, port, client):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -142,15 +150,11 @@ class TheServer:
         if data[0:5] == "PORTS":
             self.client.ports = ast.literal_eval(data[5:])
         else:
-            #print "ENC DATA:\n", self.data
-            #data = key.decrypt(self.data)
+            print "ENC DATA:\n", self.data
+            data = key.decrypt(self.data)
             print "DATA: \n", data
             if HeaderR.is_r(HeaderR(), data):
                 self.temp_connection(data)
-            if HeaderF.is_f(HeaderF(), data):
-                # add nonce to the forwarding table
-                nonce, port, ip = HeaderF.extract(HeaderF(), data)
-                ftable[nonce]=(ip, port)
             elif HeaderM.is_m(HeaderM(), data):
                 msg = HeaderM.extract(HeaderM(), data)
                 print "FINAL NODE"

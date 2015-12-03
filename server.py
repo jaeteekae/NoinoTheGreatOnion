@@ -10,8 +10,7 @@ import time
 import sys
 import random
 
-from headers import HeaderK
-from headers import HeaderR
+from headers import *
 from BaseHTTPServer import BaseHTTPRequestHandler
 from StringIO import StringIO
 from parse import *
@@ -39,6 +38,7 @@ class HTTPRequest(BaseHTTPRequestHandler):
 class TheServer:
     input_list = []
     ports = {}
+    available_nonces = set(range(10000))
 
     def __init__(self, host, port):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -80,6 +80,13 @@ class TheServer:
         #if request.command == "GET":
         if data[0:4] == "PORT":
             self.add_port(sockfd, data)
+        elif HeaderN.is_n(HeaderN(), data):
+            code = HeaderN.extract(HeaderN(), data)
+            print "CODE: ", code[0]
+            if code[0] == "-1":
+                self.send_nonce(sockfd)
+            else:
+                self.nonce_returned(code[0])
 
     def add_port(self, sockfd, data):
             port_and_key = parse("PORT {}\n{}", data).fixed
@@ -89,6 +96,16 @@ class TheServer:
                 self.client.connect((client[0], client[1]))
                 self.client.sendall("PORTS" + str(self.ports))
                 self.client.close()
+
+    def send_nonce(self, sockfd):
+            nonce = random.choice(tuple(self.available_nonces))
+            self.available_nonces.remove(nonce)
+            print str(nonce)
+            msg = HeaderN.add(HeaderN(), str(nonce))
+            sockfd.sendall(msg)
+
+    def nonce_returned(self, nonce):
+            self.available_nonces.add(nonce)
 
 
 if __name__ == '__main__':
