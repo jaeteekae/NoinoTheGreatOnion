@@ -231,9 +231,12 @@ class TheServer:
             if HeaderM.is_m(decoded_msg):
                 msg = HeaderM.extract(decoded_msg)[0]
                 response = self.http_response(msg)
-                pk = RSA.importKey(decoded_key1 + decoded_key2)
-                encoded_response = self.split_response(response, pk)
-                self.s.sendall(encoded_response)
+                try:
+                    pk = RSA.importKey(decoded_key1 + decoded_key2)
+                    encoded_response = self.split_response(response, pk)
+                    self.s.sendall(encoded_response)
+                except:
+                    self.s.sendall("")
             else:
                 # add partially decoded message & key to the buffer table
                 self.msgbuffer[nonce] = (decoded_msg, decoded_key1, decoded_key2)
