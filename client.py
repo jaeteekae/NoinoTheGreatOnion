@@ -8,6 +8,7 @@ import sys
 import time
 import select
 import random
+import thread
 import threading
 import ast
 import time
@@ -40,7 +41,7 @@ class TheClient:
             self.client.connect((self.IP, self.port))
         except socket.error:
             print "Cannot connect to server"
-            sys.exit()
+            thread.interrupt_main()
 
         msg = HeaderP.add(str((sys.argv)[1]), public_key.exportKey('PEM'))
 
@@ -48,7 +49,7 @@ class TheClient:
             self.client.sendall(msg) # tell the server what port the Client Server is listening on
         except socket.error:
             print "Server has disconnected"
-            sys.exit()
+            thread.interrupt_main()
 
     def main_loop(self):
         while 1:
@@ -133,7 +134,7 @@ class TheClient:
             self.sender.sendall(msg)
         except socket.error:
             print "An essential node has disconnected. Cannot send message."
-            sys.exit()
+            thread.interrupt_main()
         self.sender.close()
 
     # establish temporary connection to send and receive a message from server at (ip, port)
@@ -144,7 +145,7 @@ class TheClient:
             self.sender.sendall(msg)
         except socket.error:
             print "An essential node has disconnected. Cannot send message."
-            sys.exit()
+            thread.interrupt_main()
         return self.recv_all(self.sender, 10)
 
     def recv_all(self, sock, t):
