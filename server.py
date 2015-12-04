@@ -56,8 +56,10 @@ class TheServer:
                 if self.s == self.server:
                     self.on_accept()
                     break
-
-                self.data = self.s.recv(buffer_size)
+                try:
+                    self.data = self.s.recv(buffer_size)
+                except:
+                    continue
                 if len(self.data) == 0:
                     self.on_close()
                     break
@@ -67,9 +69,11 @@ class TheServer:
     def on_accept(self):
         clientsock, clientaddr = self.server.accept()
         self.input_list.append(clientsock)
+        # print clientsock.getsockname()[0], clientsock.getsockname()[1]
 
     def on_close(self):
         self.input_list.remove(self.s)
+        self.s.close()
 
     def on_recv(self, sockfd):
         data = self.data
@@ -84,7 +88,7 @@ class TheServer:
 
     def add_port(self, sockfd, data):
             port, key = HeaderP.extract(data)
-            self.ports[str(sockfd)] = (sockfd.getsockname()[0], int(port), key)
+            self.ports[str(sockfd)] = (sockfd.getpeername()[0], int(port), key)
             for client in self.ports.values():
                 self.client = socket.socket()
                 self.client.connect((client[0], client[1]))
