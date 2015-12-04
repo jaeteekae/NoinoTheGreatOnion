@@ -37,7 +37,7 @@ class TheClient:
         self.port = port
 
         try:
-            self.client.connect((self.IP, self.port)) ##### CHANGE
+            self.client.connect((self.IP, self.port))
         except socket.error:
             print "Cannot connect to server"
             sys.exit()
@@ -81,7 +81,6 @@ class TheClient:
         else:
             # send HeaderN with -1 to indicate need for new nonce
             msg = HeaderN.add("-1")
-            #### CHANGE
             self.response = self.temp_connection_with_response(self.IP, self.port, msg)
             nonce = HeaderN.extract(self.response)[0]
 
