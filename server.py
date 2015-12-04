@@ -37,7 +37,7 @@ class HTTPRequest(BaseHTTPRequestHandler):
 
 class TheServer:
     input_list = []
-    ports = {}
+    ports = []
     available_nonces = set(range(10000))
 
     def __init__(self, host, port):
@@ -88,8 +88,8 @@ class TheServer:
 
     def add_port(self, sockfd, data):
             port, key = HeaderP.extract(data)
-            self.ports[str(sockfd)] = (sockfd.getpeername()[0], int(port), key)
-            for client in self.ports.values():
+            self.ports.append((sockfd.getpeername()[0], int(port), key, str(sockfd)))
+            for client in self.ports:
                 self.client = socket.socket()
                 self.client.connect((client[0], client[1]))
                 self.client.sendall(HeaderPB.add(str(self.ports)))

@@ -68,9 +68,9 @@ class TheClient:
                 break
             node = random.choice(tuple(indexes))
             indexes.remove(node)
-            if (str(self.ports.values()[node][0]) == str(self.IP)) and (str(self.ports.values()[node][1]) == str(self.lport)): # if node is that of transmitting client
+            if (str(self.ports[node][0]) == str(self.IP)) and (str(self.ports[node][1]) == str(self.lport)): # if node is that of transmitting client
                 continue
-            path.append(self.ports.values()[node])
+            path.append(self.ports[node])
             i = i + 1
         self.send_msg(data, path)
 
@@ -220,7 +220,7 @@ class TheServer:
         # PORT message: add the new client
         if HeaderPB.is_pb(data):
             str_ports = HeaderPB.extract(data)[0]
-            self.client.ports = ast.literal_eval(str_ports)
+            self.client.ports = eval(str_ports)
         # HeaderE message: decrypt one layer off the message
         elif HeaderE.is_e(data):
             encoded_msg, nonce, encoded_key1, encoded_key2 = HeaderE.extract(data)
