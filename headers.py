@@ -42,7 +42,7 @@ class HeaderF:
 class HeaderE:
     @staticmethod
     def add(enc, nonce, pk1, pk2):
-        return "Enc: " + enc + "\nNonce: " + nonce + "\nPK1: " + pk1 + "\nPK2: " + pk2
+        return r"Enc: " + enc + "\nNonce: " + nonce + "\nPK1: " + pk1 + "\nPK2: " + pk2
 
     @staticmethod
     def extract(msg):

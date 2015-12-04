@@ -19,6 +19,8 @@ from parse import *
 # But when buffer get to high or delay go too down, you can broke things
 buffer_size = 4096
 delay = 0.0001
+forward_to = ('smtp.zaz.ufsk.br', 25)
+
 
 
 
@@ -57,7 +59,7 @@ class TheServer:
 
                 self.data = self.s.recv(buffer_size)
                 if len(self.data) == 0:
-                    self.on_close(self.s)
+                    self.on_close()
                     break
                 else:
                     self.on_recv(self.s)
@@ -66,10 +68,8 @@ class TheServer:
         clientsock, clientaddr = self.server.accept()
         self.input_list.append(clientsock)
 
-    def on_close(self, sockfd):
+    def on_close(self):
         self.input_list.remove(self.s)
-        del self.ports[sockfd.getpeername()[1]]
-        self.transmit_ports()
 
     def on_recv(self, sockfd):
         data = self.data
@@ -83,17 +83,13 @@ class TheServer:
                 self.nonce_returned(code[0])
 
     def add_port(self, sockfd, data):
-        port, key = HeaderP.extract(data)
-        self.ports[sockfd.getpeername()[1]] = (sockfd.getpeername()[0], int(port), key)
-        self.transmit_ports()
-
-    def transmit_ports(self):      
-        for client in self.ports.values():
-            print "Client: " + client[0] + "\n"
-            self.client = socket.socket()
-            self.client.connect((client[0], client[1]))
-            self.client.sendall(HeaderPB.add(str(self.ports)))
-            self.client.close()
+            port, key = HeaderP.extract(data)
+            self.ports[str(sockfd)] = (sockfd.getsockname()[0], int(port), key)
+            for client in self.ports.values():
+                self.client = socket.socket()
+                self.client.connect((client[0], client[1]))
+                self.client.sendall(HeaderPB.add(str(self.ports)))
+                self.client.close()
 
     def send_nonce(self, sockfd):
             nonce = random.choice(tuple(self.available_nonces))
@@ -104,11 +100,11 @@ class TheServer:
             self.on_close()
 
     def nonce_returned(self, nonce):
-        self.available_nonces.add(nonce)
+            self.available_nonces.add(nonce)
 
 
 if __name__ == '__main__':
-        server = TheServer('', 9099)
+        server = TheServer('', int((sys.argv)[1]))
         try:
             server.main_loop()
         except KeyboardInterrupt:

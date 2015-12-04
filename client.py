@@ -107,6 +107,7 @@ class TheClient:
             enc_key1 = n1_key.encrypt(enc_key1, 32)[0]
             enc_key2 = n1_key.encrypt(enc_key2, 32)[0]
             enc_msg = HeaderE.add(enc_msg, nonce, enc_key1, enc_key2)
+            print "ENC_MSG\n",enc_msg
 
             # send all three messages
             self.temp_connection_no_response(n2[0], n2[1], str(m2to3))
