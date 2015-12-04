@@ -107,13 +107,11 @@ class TheClient:
             enc_key1 = n1_key.encrypt(enc_key1, 32)[0]
             enc_key2 = n1_key.encrypt(enc_key2, 32)[0]
             enc_msg = HeaderE.add(enc_msg, nonce, enc_key1, enc_key2)
-            print "ENC_MSG\n",enc_msg
 
             # send all three messages
             self.temp_connection_no_response(n2[0], n2[1], str(m2to3))
             self.temp_connection_no_response(n1[0], n1[1], str(m1to2))
             self.response = self.temp_connection_with_response(n1[0], n1[1], str(enc_msg))
-            #self.response = key.decrypt((self.response,))
             print self.decode_response()
             self.temp_connection_no_response(self.IP, self.port, HeaderN.add(nonce))
 
@@ -234,7 +232,6 @@ class TheServer:
             if HeaderM.is_m(decoded_msg):
                 msg = HeaderM.extract(decoded_msg)[0]
                 response = self.http_response(msg)
-                print decoded_key1 + decoded_key2
                 pk = RSA.importKey(decoded_key1 + decoded_key2)
                 encoded_response = self.split_response(response, pk)
                 self.s.sendall(encoded_response)
