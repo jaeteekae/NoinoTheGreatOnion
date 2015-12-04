@@ -1,13 +1,13 @@
-# NoinoTheGreatOnion
+NoinoTheGreatOnion
 Onion router in python
 
-#Setup:
+SETUP:
 -Install Python 2.7.9
 -Install virtualenvwrapper
 -Create a virtualenv and activate it
 -Install all packages from requirements.txt
 
-#Running:
+RUNNING:
 -Start the server:
     $ python server.py [port]   \# server listens on [port]
     ex. $ python server.py 9099
@@ -20,11 +20,11 @@ Onion router in python
     -Timeouts will be indicated by the client. Sending another URL on that client is allowed
      after a timeout.
 
-#NOTE:
+NOTE:
 The current implementation of Noino only supports GET requests that return small responses.
 In order to minimize timeouts, try to query for responses smaller than 5KB.
 
-#Example client interaction:
+EXAMPLE CLIENT INTERACTION
 $ python client.py 6000 9099 123.123.123.123
 https://www.eecs.tufts.edu/~jknigh02/
 <!DOCTYPE html>
