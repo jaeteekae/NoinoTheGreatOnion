@@ -21,8 +21,9 @@ RUNNING:
      after a timeout.
 
 NOTE:
-The current implementation of Noino only supports GET requests that return small responses.
-In order to minimize timeouts, try to query for responses smaller than 5KB.
+-The current implementation of Noino only supports GET requests that return small responses.
+ In order to minimize timeouts, try to query for responses smaller than 5KB.
+-If too many timeouts happen in a row, try restarting the server from scratch.
 
 EXAMPLE CLIENT INTERACTION
 $ python client.py 6000 9099 123.123.123.123
